@@ -1,0 +1,10 @@
+https://pytorch.org/vision/stable/datasets.html
+
+DTD				Describable Textures Dataset 5640 images of 47 classes
+FGVCAircraft	10,000 images of 100 classes
+Flowers102		8,189 images of 102 classes
+Food101			101,000 images of 101 classes
+ImageNet		1,200,000 images of 1000 classes
+Places365 		10,000,000 images of 365 classes
+StanfordCars	16,185 images of 196 classes
+SUN397 			130,519 images of 899 classes

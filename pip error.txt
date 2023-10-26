@@ -1,0 +1,17 @@
+pip 文件损坏解决方法
+
+    1、 首先执行命令：
+        python -m ensurepip --default-pip
+
+    2、 下载 get-pip.py 文件 地址为
+        https://bootstrap.pypa.io/get-pip.py
+
+    3、 最后从命令行进入到 get-pip.py 所在的目录，执行命令
+        python get-pip.py
+
+    注意 此步骤执行的时候可能会报出权限错误， 此时应执行
+        python get-pip.py  --user
+
+
+Ignoring invalid distribution -ip
+删除对应目录中以 ~ip 开头的目录即可

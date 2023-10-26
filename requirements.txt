@@ -1,0 +1,52 @@
+tqdm
+
+# dependence
+pipdeptree
+pkginfo
+
+# jupyter
+matplotlib
+seaborn
+pandas
+tables
+autopep8
+jupyter
+jupyter-contrib-nbextensions
+
+# pic
+pillow
+opencv-python
+opencv-python-headless
+albumentations
+kornia
+
+# ml
+numpy
+scipy
+scikit-learn
+imbalanced-learn
+# hmmlearn
+xgboost
+lightgbm
+catboost
+
+# dl
+# torch
+# torchaudio
+# torchvision
+torchsummary
+timm
+pytorch-lightning
+# lightning
+torchmetrics
+transformers
+
+tensorboard
+# tensorboardx
+wandb
+
+onnx
+onnxsim
+onnxruntime-gpu
+
+PySoundFile	# torchvision require

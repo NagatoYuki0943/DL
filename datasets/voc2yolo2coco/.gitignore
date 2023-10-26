@@ -1,0 +1,12 @@
+*.jpg
+*.jpeg
+*.bmp
+*.png
+*.xml
+
+2007_train.txt
+2007_val.txt
+instances_train2017.json
+instances_val2017.json
+VOC2Yolo/*
+VOCdevkit/*
