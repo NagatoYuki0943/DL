@@ -2,7 +2,7 @@
 
 https://github.com/XuehaiPan/nvitop
 
-`pip install n`
+`pip install nvitop`
 
 # Run as a resource monitor:
 
