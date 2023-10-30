@@ -1,10 +1,10 @@
 tqdm
 
-# dependence
+## dependence ##
 pipdeptree
 pkginfo
 
-# jupyter
+## jupyter ##
 matplotlib
 seaborn
 pandas
@@ -13,14 +13,16 @@ autopep8
 jupyter
 jupyter-contrib-nbextensions
 
-# pic
-pillow
+## pic ##
+Pillow
 opencv-python
 opencv-python-headless
+opencv-contrib-python
 albumentations
 kornia
+scikit-image
 
-# ml
+## ml ##
 numpy
 scipy
 scikit-learn
@@ -30,23 +32,22 @@ xgboost
 lightgbm
 catboost
 
-# dl
+## dl ##
 # torch
 # torchaudio
 # torchvision
 torchsummary
 timm
-pytorch-lightning
 # lightning
+pytorch-lightning
+lightning-fabric
+accelerate
 torchmetrics
 transformers
-
+sentencepiece
 tensorboard
-# tensorboardx
 wandb
-
 onnx
 onnxsim
 onnxruntime-gpu
-
 PySoundFile	# torchvision require
