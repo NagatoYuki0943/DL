@@ -37,6 +37,7 @@ catboost
 # torchaudio
 # torchvision
 torchsummary
+torchsnooper
 timm
 # lightning
 pytorch-lightning
