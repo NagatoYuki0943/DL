@@ -9,7 +9,7 @@ import torch
 from torch import nn, Tensor
 
 
-def load_dynamic_buffer_module(model: nn.Module, state_dict: dict) -> nn.Module:
+def load_dynamic_buffer(model: nn.Module, state_dict: dict) -> nn.Module:
     """解决使用register_buffer保存的参数初始化形状和保存权重形状不统一的问题
 
     refer: https://github.com/openvinotoolkit/anomalib/blob/main/src/anomalib/models/components/base/dynamic_module.py#L32
@@ -52,7 +52,7 @@ def save():
 def load():
     model = Model()
     state_dict = torch.load("register_buffer.pth")
-    model = load_dynamic_buffer_module(model, state_dict)
+    model = load_dynamic_buffer(model, state_dict)
     print(model.buffer.size()) # [1, 20]
 
 
