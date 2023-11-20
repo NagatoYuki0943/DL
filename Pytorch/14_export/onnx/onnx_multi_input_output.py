@@ -56,10 +56,8 @@ print("export onnx success!")
 net = ort.InferenceSession(onnx_path, providers=['CPUExecutionProvider'])
 # net = ort.InferenceSession(onnx_path1, providers=['CUDAExecutionProvider'], provider_options=[{'device_id': 0}])
 
-a = np.ones((1, 2))
-a = a.astype(np.float32)
-b = np.ones((1, 2))
-b = b.astype(np.float32)
+a = np.ones((1, 2), dtype=np.float32)
+b = np.ones((1, 2), dtype=np.float32)
 
 input_names  = net.get_inputs()
 input_name1  = input_names[0].name
