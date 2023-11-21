@@ -1,6 +1,0 @@
-*.pt
-*.pth
-*.pkl
-*.torchscript
-*.onnx
-*.engine
