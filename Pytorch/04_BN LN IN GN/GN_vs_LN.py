@@ -9,7 +9,7 @@ class GroupNorm1(nn.GroupNorm):
 
     def __init__(self, num_channels, **kwargs):
         #             将 num_groups 数设置为1
-        super().__init__(1, num_channels, **kwargs)
+        super().__init__(num_groups=1, num_channels=num_channels, **kwargs)
 
 
 # GN vs LN example:
