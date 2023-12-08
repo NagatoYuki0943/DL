@@ -2,7 +2,6 @@
 ## a 虚拟环境中安装
 
 ```sh
-conda activate pytorch
 pip install jupyter
 ```
 
@@ -16,7 +15,6 @@ pip install jupyter
 进入虚拟环境
 
 ```sh
-conda activate pytorch
 jupyter notebook
 ```
 
@@ -27,8 +25,6 @@ jupyter notebook
 
 Shift+Enter，执行本单元代码，并跳转到下一单元
 Ctrl+Enter，执行本单元代码，留在本单元
-
-
 
 # 3 cell操作
 > 什么是cell？
@@ -64,33 +60,6 @@ Jupyter支持两种模式：
 ![image-20210608133932274](Jupyter.assets/image-20210608133932274.png)
 
 ![image-20210608134004341](Jupyter.assets/image-20210608134004341.png)
-
-# 3 代码补全
-
-## a.安装:
-
-```sh
-pip install jupyter_contrib_nbextensions
-# 安装失败就去pypi下载安装包,手动安装 https://pypi.org/project/jupyter-contrib-nbextensions/#files
-```
-
-## b.然后执行：
-```sh
-jupyter contrib nbextension install --user --skip-running-check
-```
-
-## c.安装autopep8:
-
-```sh
-pip install autopep8
-```
-
-## d.启动 Jupyter Notebook，勾选设置
-上面两个步骤都没报错后，启动 Jupyter Notebook，上面选项栏会出现 Nbextensions 的选项
-
-![image-20210608133641627](Jupyter.assets/image-20210608133641627.png)
-
-
 
 # Shift+Tab 参数提示
 
