@@ -29,8 +29,8 @@ print(linear2.weight.data.shape)# [5, 10]
 print(linear2.bias.data.shape)  # [5]
 
 # repleace weight and bias
-linear2.weight.data = linear1.weight.data
-linear2.bias.data = linear1.bias.data
+linear2.weight.data[:] = linear1.weight.data
+linear2.bias.data[:] = linear1.bias.data
 
 with torch.inference_mode():
     print(linear1(x))   # [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
