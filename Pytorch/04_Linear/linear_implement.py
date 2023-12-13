@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 from torch import nn
+import torch.nn.functional as F
 
 
 torch.manual_seed(0)
@@ -33,5 +34,6 @@ linear2.weight.data[:] = linear1.weight.data
 linear2.bias.data[:] = linear1.bias.data
 
 with torch.inference_mode():
-    print(linear1(x))   # [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
-    print(linear2(x))   # [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
+    print(linear1(x))                               # [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
+    print(linear2(x))                               # [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
+    print(F.linear(x, linear1.weight, linear1.bias))# [[-0.5692,  0.1194,  0.2910, -0.3820,  0.0709]]
