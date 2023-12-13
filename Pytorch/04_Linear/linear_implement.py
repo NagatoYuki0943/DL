@@ -7,7 +7,7 @@ torch.manual_seed(0)
 
 
 class Linear(nn.Module):
-    def __init__(self, in_features, out_features, bias=True):
+    def __init__(self, in_features: int, out_features: int, bias=True):
         super().__init__()
         self.weight = nn.Parameter(torch.rand(out_features, in_features))
         self.bias = nn.Parameter(torch.rand(out_features)) if bias else None
