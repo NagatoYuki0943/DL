@@ -32,6 +32,7 @@ def conv2d(x: Tensor, weight: Tensor, bias: Tensor | None = None):
         y += bias
     return y
 
+
 height, width = 5, 5
 kernel_height, kernel_width = 3, 3
 x = torch.ones(height, width)
