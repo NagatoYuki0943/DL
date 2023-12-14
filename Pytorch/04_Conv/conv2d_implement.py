@@ -49,18 +49,23 @@ conv1.bias.data[:] = bias
 print(weight.sum() + bias)
 # [-2.7271]
 
-y = conv2d(x, weight, bias)
-print(y)
+y1 = conv2d(x, weight, bias)
+print(y1)
 # [[-2.7271, -2.7271, -2.7271],
 #  [-2.7271, -2.7271, -2.7271],
 #  [-2.7271, -2.7271, -2.7271]]
 
 with torch.inference_mode():
-    print(conv1(x.reshape(1, 1, height, width)).squeeze())
+    y2 = conv1(x.reshape(1, 1, height, width)).squeeze()
+    print(y2)
     # [[-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271]]
-    print(F.conv2d(x.reshape(1, 1, height, width), weight.reshape(1, 1, kernel_height, kernel_width), bias).squeeze())
+    y3 = F.conv2d(x.reshape(1, 1, height, width), weight.reshape(1, 1, kernel_height, kernel_width), bias).squeeze()
+    print(y3)
     # [[-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271]]
+
+print(torch.allclose(y1, y2), torch.allclose(y1, y3), torch.all(y2 == y3))
+# True True tensor(True)
