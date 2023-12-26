@@ -14,7 +14,7 @@ class Linear(nn.Module):
         self.bias = nn.Parameter(torch.rand(out_features)) if bias else None
 
     def forward(self, x: Tensor) -> Tensor:
-        x = x @ self.weight.T
+        x = torch.matmul(x, self.weight.T)
         if self.bias is not None:
             x += self.bias
         return x
