@@ -11,8 +11,8 @@
     1.如果内部判断是 `self.training` 判断是否是训练模式则可以使用trace,
       不过要将模型设置为 eval 才使用推理输出(对于trace和script都相同),
       即使使用 inference_mode 也依然是训练的输出, 所以必须使用 eval
-    2.两种导出模式都分为cpu和cuda
-      载入cuda模型不需要将模型转换到cuda上
+    2.两种导出模式都分为cpu和cuda,载入cuda模型不需要将模型转换到cuda上,
+      支持 `to(device) cpu() cuda()` 方法转移到指定设备
 """
 
 
@@ -39,6 +39,7 @@ class Script(torch.nn.Module):
         else:
             return self.conv2(x)
 
+
 script_model = Script()
 script_model.eval()                 # important, don't forget!!!
 
@@ -64,6 +65,7 @@ script_model = torch.jit.script(script_model)
 # print(script_module.code)         # 查看模型结构
 torch.jit.save(script_model, "m_cpu.torchscript")
 
+
 # gpu
 if torch.cuda.is_available():
     script_model = torch.jit.script(script_model.cuda())
@@ -81,6 +83,7 @@ with torch.inference_mode():
 print(y1_.size(), y3_.size())       # [1, 64, 56, 56]   [1, 64, 56, 56]
 print(torch.all(y1==y1_))           # True
 print(torch.all(y3==y3_))           # True
+
 
 # gpu
 if torch.cuda.is_available():
@@ -110,7 +113,9 @@ class Train_Eval(torch.nn.Module):
         else:
             return self.conv(x).flatten(2).transpose(1, 2)
 
+
 train_eval = Train_Eval()
+
 
 #-------------------------------------------#
 # 不设置eval会按照训练模式导出
@@ -118,6 +123,7 @@ with torch.inference_mode():        # 使用 inference_mode 也依然是训练�
     trace_model = torch.jit.script(train_eval)
     y = trace_model(x3)
 print(y.size())                     # [1, 64, 56, 56]
+
 
 #-------------------------------------------#
 # 设置eval会使用推理模式导出
