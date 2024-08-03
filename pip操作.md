@@ -7,7 +7,7 @@ Python comes with an [`ensurepip`](https://docs.python.org/3/library/ensurepip.h
 ```sh
 python -m ensurepip --upgrade   # linux
 python -m ensurepip --upgrade   # mac
-py -m ensurepip --upgrade       # windows
+python -m ensurepip --upgrade   # windows
 ```
 
 ## `get-pip.py`
