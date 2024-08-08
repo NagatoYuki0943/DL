@@ -100,6 +100,12 @@ conda config --set auto_activate_base false
 conda config --set ssl_verify no
 ```
 
+## starship Double envs resolve
+
+```sh
+conda config --set changeps1 False
+```
+
 ## 代理
 
 > https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/
