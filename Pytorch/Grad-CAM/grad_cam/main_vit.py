@@ -1,6 +1,6 @@
-#-----------------------------#
+# -----------------------------#
 #   vit的grad cam
-#-----------------------------#
+# -----------------------------#
 
 import os
 import numpy as np
@@ -12,9 +12,9 @@ from utils import GradCAM, show_cam_on_image, center_crop_img
 from vit_model import vit_base_patch16_224
 
 
-#------------------------------------#
+# ------------------------------------#
 #   将模型的输出序列转换为宽高的形式
-#------------------------------------#
+# ------------------------------------#
 class ReshapeTransform:
     def __init__(self, model):
         input_size = model.patch_embed.img_size
@@ -25,10 +25,7 @@ class ReshapeTransform:
     def __call__(self, x):
         # remove cls token and reshape
         # [batch_size, num_tokens, token_dim] 忽略num_tokens第一个的class再reshape
-        result = x[:, 1:, :].reshape(x.size(0),
-                                     self.h,
-                                     self.w,
-                                     x.size(2))
+        result = x[:, 1:, :].reshape(x.size(0), self.h, self.w, x.size(2))
 
         # Bring the channels to the first dimension,
         # like in CNNs.
@@ -47,17 +44,18 @@ def main():
     # The gradient of the output with respect to them, will be 0!
     # We should chose any layer before the final attention block.
 
-    #-------------------------------------------#
+    # -------------------------------------------#
     #   这里是最后一个block的 norm1 不是 norm
-    #-------------------------------------------#
+    # -------------------------------------------#
     target_layers = [model.blocks[-1].norm1]
 
-    data_transform = transforms.Compose([transforms.ToTensor(),
-                                         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+    data_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]
+    )
     # load image
     img_path = "both.png"
     assert os.path.exists(img_path), "file: '{}' dose not exist.".format(img_path)
-    img = Image.open(img_path).convert('RGB')
+    img = Image.open(img_path).convert("RGB")
     img = np.array(img, dtype=np.uint8)
     img = center_crop_img(img, 224)
     # [C, H, W]
@@ -66,20 +64,22 @@ def main():
     # [C, H, W] -> [N, C, H, W]
     input_tensor = torch.unsqueeze(img_tensor, dim=0)
 
-    cam = GradCAM(model=model,
-                  target_layers=target_layers,
-                  use_cuda=False,
-                  reshape_transform=ReshapeTransform(model))
+    cam = GradCAM(
+        model=model,
+        target_layers=target_layers,
+        use_cuda=False,
+        reshape_transform=ReshapeTransform(model),
+    )
     target_category = 281  # tabby, tabby cat
     # target_category = 254  # pug, pug-dog
 
     grayscale_cam = cam(input_tensor=input_tensor, target_category=target_category)
 
     grayscale_cam = grayscale_cam[0, :]
-    visualization = show_cam_on_image(img / 255., grayscale_cam, use_rgb=True)
+    visualization = show_cam_on_image(img / 255.0, grayscale_cam, use_rgb=True)
     plt.imshow(visualization)
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

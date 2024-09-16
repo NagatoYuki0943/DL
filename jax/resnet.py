@@ -49,10 +49,10 @@ class ResNetBlock(nn.Module):
         y = self.norm(scale_init=nn.initializers.zeros_init())(y)
 
         if residual.shape != y.shape:
-            residual = self.conv(
-                self.filters, (1, 1), self.strides, name='conv_proj'
-            )(residual)
-            residual = self.norm(name='norm_proj')(residual)
+            residual = self.conv(self.filters, (1, 1), self.strides, name="conv_proj")(
+                residual
+            )
+            residual = self.norm(name="norm_proj")(residual)
 
         return self.act(residual + y)
 
@@ -80,9 +80,9 @@ class BottleneckResNetBlock(nn.Module):
 
         if residual.shape != y.shape:
             residual = self.conv(
-                self.filters * 4, (1, 1), self.strides, name='conv_proj'
+                self.filters * 4, (1, 1), self.strides, name="conv_proj"
             )(residual)
-            residual = self.norm(name='norm_proj')(residual)
+            residual = self.norm(name="norm_proj")(residual)
 
         return self.act(residual + y)
 
@@ -115,12 +115,12 @@ class ResNet(nn.Module):
             (7, 7),
             (2, 2),
             padding=[(3, 3), (3, 3)],
-            name='conv_init',
+            name="conv_init",
         )(x)
         # x = norm(name='bn_init')(x)
         x = norm()(x)
         x = nn.relu(x)
-        x = nn.max_pool(x, (3, 3), strides=(2, 2), padding='SAME')
+        x = nn.max_pool(x, (3, 3), strides=(2, 2), padding="SAME")
         for i, block_size in enumerate(self.stage_sizes):
             for j in range(block_size):
                 strides = (2, 2) if i > 0 and j == 0 else (1, 1)
@@ -139,18 +139,10 @@ class ResNet(nn.Module):
 
 ResNet18 = partial(ResNet, stage_sizes=[2, 2, 2, 2], block_cls=ResNetBlock)
 ResNet34 = partial(ResNet, stage_sizes=[3, 4, 6, 3], block_cls=ResNetBlock)
-ResNet50 = partial(
-    ResNet, stage_sizes=[3, 4, 6, 3], block_cls=BottleneckResNetBlock
-)
-ResNet101 = partial(
-    ResNet, stage_sizes=[3, 4, 23, 3], block_cls=BottleneckResNetBlock
-)
-ResNet152 = partial(
-    ResNet, stage_sizes=[3, 8, 36, 3], block_cls=BottleneckResNetBlock
-)
-ResNet200 = partial(
-    ResNet, stage_sizes=[3, 24, 36, 3], block_cls=BottleneckResNetBlock
-)
+ResNet50 = partial(ResNet, stage_sizes=[3, 4, 6, 3], block_cls=BottleneckResNetBlock)
+ResNet101 = partial(ResNet, stage_sizes=[3, 4, 23, 3], block_cls=BottleneckResNetBlock)
+ResNet152 = partial(ResNet, stage_sizes=[3, 8, 36, 3], block_cls=BottleneckResNetBlock)
+ResNet200 = partial(ResNet, stage_sizes=[3, 24, 36, 3], block_cls=BottleneckResNetBlock)
 
 ResNet18Local = partial(
     ResNet, stage_sizes=[2, 2, 2, 2], block_cls=ResNetBlock, conv=nn.ConvLocal
@@ -166,26 +158,26 @@ _ResNet1Local = partial(
 # 定义模型的前向传播函数
 def predict(model: nn.Module, variables: dict, input_sample: jax.Array) -> jax.Array:
     # 使用模型的apply方法进行前向传播
-    outputs = model.apply(variables, input_sample, mutable=['batch_stats'])
+    outputs = model.apply(variables, input_sample, mutable=["batch_stats"])
     return outputs
 
 
 if __name__ == "__main__":
     rng: jax.Array = jax.random.key(0)
-    model = ResNet18(num_classes = 10, dtype = jnp.float32)
+    model = ResNet18(num_classes=10, dtype=jnp.float32)
     input_sample: jax.Array = jnp.ones((2, 64, 64, 3), jnp.float32)
 
     variables = model.init(rng, input_sample)
 
     # 调用前向传播函数
     outputs = predict(model, variables, input_sample)
-    print(len(outputs))     # 2
+    print(len(outputs))  # 2
 
-    print(outputs[0].shape) # (2, 10)
+    print(outputs[0].shape)  # (2, 10)
 
     for key, value in outputs[1].items():
         print(key)  # batch_stats
-        for k ,v in value.items():
+        for k, v in value.items():
             print(f"--> {k}")
             # --> BatchNorm_0
             # --> ResNetBlock_0

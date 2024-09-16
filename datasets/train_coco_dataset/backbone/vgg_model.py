@@ -7,13 +7,13 @@ class VGG(nn.Module):
         super(VGG, self).__init__()
         self.features = features
         self.classifier = nn.Sequential(
-            nn.Linear(512*7*7, 4096),
+            nn.Linear(512 * 7 * 7, 4096),
             nn.ReLU(True),
             nn.Dropout(p=0.5),
             nn.Linear(4096, 4096),
             nn.ReLU(True),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, class_num)
+            nn.Linear(4096, class_num),
         )
         if init_weights and weights_path is None:
             self._initialize_weights()
@@ -57,15 +57,58 @@ def make_features(cfg: list):
 
 
 cfgs = {
-    'vgg11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'vgg16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'vgg19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+    "vgg11": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "vgg13": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "vgg16": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+    ],
+    "vgg19": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+    ],
 }
 
 
 def vgg(model_name="vgg16", weights_path=None):
-    assert model_name in cfgs, "Warning: model number {} not in cfgs dict!".format(model_name)
+    assert model_name in cfgs, "Warning: model number {} not in cfgs dict!".format(
+        model_name
+    )
     cfg = cfgs[model_name]
 
     model = VGG(make_features(cfg), weights_path=weights_path)

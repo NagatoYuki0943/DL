@@ -6,7 +6,7 @@ import shutil
 # 定义类别名称与ID号的映射
 # 需要注意的是，不需要按照ISAT的classesition.txt里面的定义来
 # 可以选择部分自己需要的类别， ID序号也可以重新填写(从0开始)
-category_mapping = {"jar": 1,"conical_flask": 2,"beaker":3}
+category_mapping = {"jar": 1, "conical_flask": 2, "beaker": 3}
 # ISAT格式的实例分割标注文件
 ISAT_FOLDER = "./istat"
 # YOLO格式的实例分割标注文件

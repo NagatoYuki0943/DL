@@ -28,7 +28,7 @@ def conv3d(x: Tensor, weight: Tensor, bias: Tensor | None = None):
     for i in range(y.shape[0]):
         for j in range(y.shape[1]):
             for k in range(y.shape[2]):
-                y[i, j, k] = (x[i:i + d, j:j + h, k:k + w] * weight).sum()
+                y[i, j, k] = (x[i : i + d, j : j + h, k : k + w] * weight).sum()
     if bias:
         y += bias
     return y
@@ -40,9 +40,11 @@ x = torch.ones(depth, height, width)
 weight = torch.randn(kernel_depth, kernel_height, kernel_width)
 bias = torch.randn(1)
 
-conv1 = nn.Conv3d(1, 1, (kernel_depth, kernel_height, kernel_width), stride=1, padding=0, bias=True)
+conv1 = nn.Conv3d(
+    1, 1, (kernel_depth, kernel_height, kernel_width), stride=1, padding=0, bias=True
+)
 print(conv1.weight.data.shape)  # [1, 1, 3, 3, 3]
-print(conv1.bias.data.shape)    # [1]
+print(conv1.bias.data.shape)  # [1]
 
 conv1.weight.data[:] = weight.reshape(1, 1, kernel_depth, kernel_height, kernel_width)
 conv1.bias.data[:] = bias
@@ -74,7 +76,11 @@ with torch.inference_mode():
     #  [[-7.1899, -7.1899, -7.1899],
     #   [-7.1899, -7.1899, -7.1899],
     #   [-7.1899, -7.1899, -7.1899]]]
-    y3 = F.conv3d(x.reshape(1, 1, depth, height, width), weight.reshape(1, 1, kernel_depth, kernel_height, kernel_width), bias).squeeze()
+    y3 = F.conv3d(
+        x.reshape(1, 1, depth, height, width),
+        weight.reshape(1, 1, kernel_depth, kernel_height, kernel_width),
+        bias,
+    ).squeeze()
     print(y3)
     # [[[-7.1899, -7.1899, -7.1899],
     #   [-7.1899, -7.1899, -7.1899],

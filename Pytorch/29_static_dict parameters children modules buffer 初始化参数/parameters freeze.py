@@ -9,7 +9,7 @@ model = vgg16()
 可以通过named_parameters冻结权重
 """
 for k, v in model.named_parameters():
-    if 'features' in k:
+    if "features" in k:
         v.requires_grad = False
     else:
         print(f"training: {k}")

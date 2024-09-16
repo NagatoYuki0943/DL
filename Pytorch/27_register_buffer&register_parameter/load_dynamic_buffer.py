@@ -1,8 +1,8 @@
-#-------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------#
 #   self.register_buffer('name', Tensor)的操作，该方法的作用是定义一组参数，
 #   该组参数的特别之处在于：模型训练时不会更新（即调用 optimizer.step() 后该组参数不会变化，
 #   只可人为地改变它们的值，但是保存模型时，该组参数又作为模型参数不可或缺的一部分被保存。
-#-------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------#
 
 
 import torch
@@ -33,7 +33,7 @@ class Model(nn.Module):
     def __init__(self) -> None:
         super(Model, self).__init__()
         self.fc = nn.Linear(10, 20)
-        self.register_buffer('buffer', torch.Tensor())
+        self.register_buffer("buffer", torch.Tensor())
         self.buffer: Tensor
 
     def forward(self, x):
@@ -53,7 +53,7 @@ def load():
     model = Model()
     state_dict = torch.load("register_buffer.pth")
     model = load_dynamic_buffer(model, state_dict)
-    print(model.buffer.size()) # [1, 20]
+    print(model.buffer.size())  # [1, 20]
 
 
 if __name__ == "__main__":

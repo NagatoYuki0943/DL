@@ -9,22 +9,34 @@ from pycocotools.cocoeval import COCOeval
 import train_utils.distributed_utils as utils
 
 
-def train_one_epoch(model, optimizer, data_loader, device, epoch,
-                    print_freq=50, warmup=False, scaler=None):
+def train_one_epoch(
+    model,
+    optimizer,
+    data_loader,
+    device,
+    epoch,
+    print_freq=50,
+    warmup=False,
+    scaler=None,
+):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
-    metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    header = 'Epoch: [{}]'.format(epoch)
+    metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    header = "Epoch: [{}]".format(epoch)
 
     lr_scheduler = None
-    if epoch == 0 and warmup is True:  # 当训练第一轮（epoch=0）时，启用warmup训练方式，可理解为热身训练
+    if (
+        epoch == 0 and warmup is True
+    ):  # 当训练第一轮（epoch=0）时，启用warmup训练方式，可理解为热身训练
         warmup_factor = 1.0 / 1000
         warmup_iters = min(1000, len(data_loader) - 1)
 
         lr_scheduler = utils.warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor)
 
     mloss = torch.zeros(1).to(device)  # mean losses
-    for i, [images, targets] in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+    for i, [images, targets] in enumerate(
+        metric_logger.log_every(data_loader, print_freq, header)
+    ):
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -104,7 +116,8 @@ def evaluate(model, data_loader, device):
 
             # 遍历每个目标的信息
             for object_score, object_class, object_box in zip(
-                    per_image_scores, per_image_classes, per_image_boxes):
+                per_image_scores, per_image_classes, per_image_boxes
+            ):
                 object_score = float(object_score)
                 # 要将类别信息还原回coco91中
                 coco80_class = int(object_class)
@@ -113,10 +126,12 @@ def evaluate(model, data_loader, device):
                 # to reduce resulting JSON file size.
                 object_box = [round(b, 2) for b in object_box.tolist()]
 
-                res = {"image_id": img_id,
-                       "category_id": coco91_class,
-                       "bbox": object_box,
-                       "score": round(object_score, 3)}
+                res = {
+                    "image_id": img_id,
+                    "category_id": coco91_class,
+                    "bbox": object_box,
+                    "score": round(object_score, 3),
+                }
                 results.append(res)
 
         metric_logger.update(model_time=model_time)
@@ -136,12 +151,12 @@ def evaluate(model, data_loader, device):
 
         # write predict results into json file
         json_str = json.dumps(results, indent=4)
-        with open('predict_tmp.json', 'w') as json_file:
+        with open("predict_tmp.json", "w") as json_file:
             json_file.write(json_str)
 
         # accumulate predictions from all images
         coco_true = data_loader.dataset.coco
-        coco_pre = coco_true.loadRes('predict_tmp.json')
+        coco_pre = coco_true.loadRes("predict_tmp.json")
 
         coco_evaluator = COCOeval(cocoGt=coco_true, cocoDt=coco_pre, iouType="bbox")
         coco_evaluator.evaluate()

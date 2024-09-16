@@ -21,10 +21,11 @@ class Net(nn.Module):
 @torchsnooper.snoop()
 def test():
     x = torch.ones(1, 3, 224, 224)
-    model = Net().cuda()                    # 将模型放到显卡上
+    model = Net().cuda()  # 将模型放到显卡上
     model.eval()
     with torch.inference_mode():
         y = model(x)
     print(y.size())
-test()
 
+
+test()

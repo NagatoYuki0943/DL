@@ -24,7 +24,7 @@ y = torch.randn(1, 16000, 384)
 cdist = Cdist()
 z = cdist(x, y)
 
-onnx_path = 'cdist4.onnx'
+onnx_path = "cdist4.onnx"
 torch.onnx.export(
     cdist,
     (x, y),
@@ -43,7 +43,7 @@ print("export onnx success!")
 
 if True:
     ## onnxruntime
-    net = ort.InferenceSession(onnx_path, providers=['CPUExecutionProvider'])
+    net = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
     # net = ort.InferenceSession(onnx_path1, providers=['CUDAExecutionProvider'], provider_options=[{'device_id': 0}])
 
     x = np.random.randn(1, 784, 384)
@@ -51,15 +51,13 @@ if True:
     y = np.random.randn(1, 16000, 384)
     y = y.astype(np.float32)
 
-
-    input_names  = net.get_inputs()
-    input_name1  = input_names[0].name
-    input_name2  = input_names[1].name
-    print(input_name1, input_name2) # x y
+    input_names = net.get_inputs()
+    input_name1 = input_names[0].name
+    input_name2 = input_names[1].name
+    print(input_name1, input_name2)  # x y
     output_names = net.get_outputs()
-    output_name  = output_names[0].name
-    print(output_name)              # z
+    output_name = output_names[0].name
+    print(output_name)  # z
 
-
-    out = net.run(None,{input_name1: x, input_name2: y})
+    out = net.run(None, {input_name1: x, input_name2: y})
     print(out)

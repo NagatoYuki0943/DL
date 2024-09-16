@@ -1,6 +1,6 @@
-#-----------------------------------------------#
+# -----------------------------------------------#
 #   查看模型权重分布
-#-----------------------------------------------#
+# -----------------------------------------------#
 
 import torch
 from efficientnet_v1_00 import efficientnet_b0
@@ -35,14 +35,17 @@ for key in weights_keys:
     weight_std = weight_t.std(ddof=1)
     weight_min = weight_t.min()
     weight_max = weight_t.max()
-    print("mean is {}, std is {}, min is {}, max is {}".format(weight_mean,
-                                                               weight_std,
-                                                               weight_max,
-                                                               weight_min))
+    print(
+        "mean is {}, std is {}, min is {}, max is {}".format(
+            weight_mean, weight_std, weight_max, weight_min
+        )
+    )
 
     # plot hist image
     plt.close()
-    weight_vec = np.reshape(weight_t, [-1]) # 变为一维向量
-    plt.hist(weight_vec, bins=50)           # 直方图 bins=50 将数据从小到大分为50份,统计每个区间个数
+    weight_vec = np.reshape(weight_t, [-1])  # 变为一维向量
+    plt.hist(
+        weight_vec, bins=50
+    )  # 直方图 bins=50 将数据从小到大分为50份,统计每个区间个数
     plt.title(key)
     plt.show()

@@ -143,7 +143,7 @@ class BoxCoder(object):
     the representation used for training the regressors.
     """
 
-    def __init__(self, weights, bbox_xform_clip=math.log(1000. / 16)):
+    def __init__(self, weights, bbox_xform_clip=math.log(1000.0 / 16)):
         # type: (Tuple[float, float, float, float], float) -> None
         """
         Arguments:
@@ -211,9 +211,7 @@ class BoxCoder(object):
             box_sum += val
 
         # 将预测的bbox回归参数应用到对应anchors上得到预测bbox的坐标
-        pred_boxes = self.decode_single(
-            rel_codes, concat_boxes
-        )
+        pred_boxes = self.decode_single(rel_codes, concat_boxes)
 
         # 防止pred_boxes为空时导致reshape报错
         if box_sum > 0:
@@ -233,16 +231,16 @@ class BoxCoder(object):
         boxes = boxes.to(rel_codes.dtype)
 
         # xmin, ymin, xmax, ymax
-        widths = boxes[:, 2] - boxes[:, 0]   # anchor/proposal宽度
+        widths = boxes[:, 2] - boxes[:, 0]  # anchor/proposal宽度
         heights = boxes[:, 3] - boxes[:, 1]  # anchor/proposal高度
-        ctr_x = boxes[:, 0] + 0.5 * widths   # anchor/proposal中心x坐标
+        ctr_x = boxes[:, 0] + 0.5 * widths  # anchor/proposal中心x坐标
         ctr_y = boxes[:, 1] + 0.5 * heights  # anchor/proposal中心y坐标
 
         wx, wy, ww, wh = self.weights  # RPN中为[1,1,1,1], fastrcnn中为[10,10,5,5]
-        dx = rel_codes[:, 0::4] / wx   # 预测anchors/proposals的中心坐标x回归参数
-        dy = rel_codes[:, 1::4] / wy   # 预测anchors/proposals的中心坐标y回归参数
-        dw = rel_codes[:, 2::4] / ww   # 预测anchors/proposals的宽度回归参数
-        dh = rel_codes[:, 3::4] / wh   # 预测anchors/proposals的高度回归参数
+        dx = rel_codes[:, 0::4] / wx  # 预测anchors/proposals的中心坐标x回归参数
+        dy = rel_codes[:, 1::4] / wy  # 预测anchors/proposals的中心坐标y回归参数
+        dw = rel_codes[:, 2::4] / ww  # 预测anchors/proposals的宽度回归参数
+        dh = rel_codes[:, 3::4] / wh  # 预测anchors/proposals的高度回归参数
 
         # limit max value, prevent sending too large values into torch.exp()
         # self.bbox_xform_clip=math.log(1000. / 16)   4.135
@@ -255,15 +253,29 @@ class BoxCoder(object):
         pred_h = torch.exp(dh) * heights[:, None]
 
         # xmin
-        pred_boxes1 = pred_ctr_x - torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        pred_boxes1 = (
+            pred_ctr_x
+            - torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        )
         # ymin
-        pred_boxes2 = pred_ctr_y - torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
+        pred_boxes2 = (
+            pred_ctr_y
+            - torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
+        )
         # xmax
-        pred_boxes3 = pred_ctr_x + torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        pred_boxes3 = (
+            pred_ctr_x
+            + torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        )
         # ymax
-        pred_boxes4 = pred_ctr_y + torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
+        pred_boxes4 = (
+            pred_ctr_y
+            + torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
+        )
 
-        pred_boxes = torch.stack((pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=2).flatten(1)
+        pred_boxes = torch.stack(
+            (pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=2
+        ).flatten(1)
         return pred_boxes
 
 
@@ -272,8 +284,8 @@ class Matcher(object):
     BETWEEN_THRESHOLDS = -2
 
     __annotations__ = {
-        'BELOW_LOW_THRESHOLD': int,
-        'BETWEEN_THRESHOLDS': int,
+        "BELOW_LOW_THRESHOLD": int,
+        "BETWEEN_THRESHOLDS": int,
     }
 
     def __init__(self, high_threshold, low_threshold, allow_low_quality_matches=False):
@@ -295,7 +307,7 @@ class Matcher(object):
         self.BETWEEN_THRESHOLDS = -2
         assert low_threshold <= high_threshold
         self.high_threshold = high_threshold  # 0.7
-        self.low_threshold = low_threshold    # 0.3
+        self.low_threshold = low_threshold  # 0.3
         self.allow_low_quality_matches = allow_low_quality_matches
 
     def __call__(self, match_quality_matrix):
@@ -316,18 +328,22 @@ class Matcher(object):
             if match_quality_matrix.shape[0] == 0:
                 raise ValueError(
                     "No ground-truth boxes available for one of the images "
-                    "during training")
+                    "during training"
+                )
             else:
                 raise ValueError(
                     "No proposal boxes available for one of the images "
-                    "during training")
+                    "during training"
+                )
 
         # match_quality_matrix is M (gt) x N (predicted)
         # Max over gt elements (dim 0) to find best gt candidate for each prediction
         # M x N 的每一列代表一个anchors与所有gt的匹配iou值
         # matched_vals代表每列的最大值，即每个anchors与所有gt匹配的最大iou值
         # matches对应最大值所在的索引
-        matched_vals, matches = match_quality_matrix.max(dim=0)  # the dimension to reduce.
+        matched_vals, matches = match_quality_matrix.max(
+            dim=0
+        )  # the dimension to reduce.
         if self.allow_low_quality_matches:
             all_matches = matches.clone()
         else:
@@ -344,7 +360,7 @@ class Matcher(object):
         matches[below_low_threshold] = self.BELOW_LOW_THRESHOLD  # -1
 
         # iou在[low_threshold, high_threshold]之间的matches索引置为-2
-        matches[between_thresholds] = self.BETWEEN_THRESHOLDS    # -2
+        matches[between_thresholds] = self.BETWEEN_THRESHOLDS  # -2
 
         if self.allow_low_quality_matches:
             assert all_matches is not None
@@ -363,7 +379,9 @@ class Matcher(object):
         # For each gt, find the prediction with which it has highest quality
         # 对于每个gt boxes寻找与其iou最大的anchor，
         # highest_quality_foreach_gt为匹配到的最大iou值
-        highest_quality_foreach_gt, _ = match_quality_matrix.max(dim=1)  # the dimension to reduce.
+        highest_quality_foreach_gt, _ = match_quality_matrix.max(
+            dim=1
+        )  # the dimension to reduce.
 
         # Find highest quality match available, even if it is low, including ties
         # 寻找每个gt boxes与其iou最大的anchor索引，一个gt匹配到的最大iou可能有多个anchor
@@ -394,7 +412,7 @@ class Matcher(object):
         matches[pre_inds_to_update] = all_matches[pre_inds_to_update]
 
 
-def smooth_l1_loss(input, target, beta: float = 1. / 9, size_average: bool = True):
+def smooth_l1_loss(input, target, beta: float = 1.0 / 9, size_average: bool = True):
     """
     very similar to the smooth_l1_loss from pytorch, but with
     the extra beta parameter
@@ -402,7 +420,7 @@ def smooth_l1_loss(input, target, beta: float = 1. / 9, size_average: bool = Tru
     n = torch.abs(input - target)
     # cond = n < beta
     cond = torch.lt(n, beta)
-    loss = torch.where(cond, 0.5 * n ** 2 / beta, n - 0.5 * beta)
+    loss = torch.where(cond, 0.5 * n**2 / beta, n - 0.5 * beta)
     if size_average:
         return loss.mean()
     return loss.sum()

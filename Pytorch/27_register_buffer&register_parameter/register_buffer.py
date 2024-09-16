@@ -1,8 +1,8 @@
-#-------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------#
 #   self.register_buffer('name', Tensor)的操作，该方法的作用是定义一组参数，
 #   该组参数的特别之处在于：模型训练时不会更新(即调用 optimizer.step() 后该组参数不会变化，
 #   只可人为地改变它们的值，但是保存模型时，该组参数又作为模型参数不可或缺的一部分被保存。
-#-------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------#
 
 
 import torch
@@ -19,10 +19,10 @@ class Model(nn.Module):
         self.se = nn.Parameter(torch.randn(1, 2))
 
         # (3) 使用形式类似的 register_parameter() 定义一组参数，和上面效果相同
-        self.register_parameter('param_reg', nn.Parameter(torch.randn(1, 2)))
+        self.register_parameter("param_reg", nn.Parameter(torch.randn(1, 2)))
 
         # (4) 使用 register_buffer() 定义一组参数,不会被梯度更新
-        self.register_buffer('param_buf', torch.randn(1, 2))
+        self.register_buffer("param_buf", torch.randn(1, 2))
 
         # (5) 按照类的属性形式定义一组变量，不会被state_dict()保存
         self.param_attr = torch.randn(1, 2)

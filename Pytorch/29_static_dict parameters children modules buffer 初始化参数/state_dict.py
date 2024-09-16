@@ -3,7 +3,6 @@
 k可以修改,满足迁移学习的需要
 """
 
-
 import torch
 from torchvision.models import vgg16
 
@@ -44,7 +43,7 @@ for k, v in pre_state_dict.items():
     # classifier.6.weight
     # classifier.6.bias
 
-print('*'*100)
+print("*" * 100)
 model = vgg16()
 state_dict = model.state_dict()
 for k, v in state_dict.items():

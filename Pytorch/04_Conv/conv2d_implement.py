@@ -27,7 +27,7 @@ def conv2d(x: Tensor, weight: Tensor, bias: Tensor | None = None):
     y = torch.zeros((x.shape[0] - h + 1, x.shape[1] - w + 1))
     for i in range(y.shape[0]):
         for j in range(y.shape[1]):
-            y[i, j] = (x[i:i + h, j:j + w] * weight).sum()
+            y[i, j] = (x[i : i + h, j : j + w] * weight).sum()
     if bias:
         y += bias
     return y
@@ -41,7 +41,7 @@ bias = torch.randn(1)
 
 conv1 = nn.Conv2d(1, 1, (kernel_height, kernel_width), stride=1, padding=0, bias=True)
 print(conv1.weight.data.shape)  # [1, 1, 3, 3]
-print(conv1.bias.data.shape)    # [1]
+print(conv1.bias.data.shape)  # [1]
 
 conv1.weight.data[:] = weight.reshape(1, 1, kernel_height, kernel_width)
 conv1.bias.data[:] = bias
@@ -61,7 +61,11 @@ with torch.inference_mode():
     # [[-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271]]
-    y3 = F.conv2d(x.reshape(1, 1, height, width), weight.reshape(1, 1, kernel_height, kernel_width), bias).squeeze()
+    y3 = F.conv2d(
+        x.reshape(1, 1, height, width),
+        weight.reshape(1, 1, kernel_height, kernel_width),
+        bias,
+    ).squeeze()
     print(y3)
     # [[-2.7271, -2.7271, -2.7271],
     #  [-2.7271, -2.7271, -2.7271],

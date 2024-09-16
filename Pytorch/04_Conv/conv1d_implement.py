@@ -26,7 +26,7 @@ def conv1d(x: Tensor, weight: Tensor, bias: Tensor | None = None):
     l = weight.shape[0]
     y = torch.zeros(x.shape[0] - l + 1)
     for i in range(y.shape[0]):
-        y[i] = (x[i:i + l] * weight).sum()
+        y[i] = (x[i : i + l] * weight).sum()
     if bias is not None:
         y += bias
     return y
@@ -40,7 +40,7 @@ bias = torch.randn(1)
 
 conv1 = nn.Conv1d(1, 1, kernel_length, stride=1, padding=0, bias=True)
 print(conv1.weight.data.shape)  # [1, 3, 3]
-print(conv1.bias.data.shape)    # [1]
+print(conv1.bias.data.shape)  # [1]
 
 conv1.weight.data[:] = weight.reshape(1, 1, kernel_length)
 conv1.bias.data[:] = bias
@@ -56,7 +56,9 @@ with torch.inference_mode():
     y2 = conv1(x.reshape(1, 1, length)).squeeze()
     print(y2)
     # [-0.3628, -0.3628, -0.3628]
-    y3 = F.conv1d(x.reshape(1, 1, length), weight.reshape(1, 1, kernel_length), bias).squeeze()
+    y3 = F.conv1d(
+        x.reshape(1, 1, length), weight.reshape(1, 1, kernel_length), bias
+    ).squeeze()
     print(y3)
     # [-0.3628, -0.3628, -0.3628]
 

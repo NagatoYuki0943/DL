@@ -3,11 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 
 
-def dilated_conv_one_pixel(center: (int, int),
-                           feature_map: np.ndarray,
-                           k: int = 3,
-                           r: int = 1,
-                           v: int = 1):
+def dilated_conv_one_pixel(
+    center: (int, int), feature_map: np.ndarray, k: int = 3, r: int = 1, v: int = 1
+):
     """
     膨胀卷积核中心在指定坐标center处时，统计哪些像素被利用到，
     并在利用到的像素位置处加上增量v
@@ -27,9 +25,7 @@ def dilated_conv_one_pixel(center: (int, int),
             feature_map[left_top[1] + i * r][left_top[0] + j * r] += v
 
 
-def dilated_conv_all_map(dilated_map: np.ndarray,
-                         k: int = 3,
-                         r: int = 1):
+def dilated_conv_all_map(dilated_map: np.ndarray, k: int = 3, r: int = 1):
     """
     根据输出特征矩阵中哪些像素被使用以及使用次数，
     配合膨胀卷积k和r计算输入特征矩阵哪些像素被使用以及使用次数
@@ -48,13 +44,13 @@ def dilated_conv_all_map(dilated_map: np.ndarray,
 
 
 def plot_map(matrix: np.ndarray):
-    '''
+    """
     画图
-    '''
+    """
     plt.figure(figsize=(8, 8))
 
-    c_list = ['white', 'blue', 'red']
-    new_cmp = LinearSegmentedColormap.from_list('chaos', c_list)
+    c_list = ["white", "blue", "red"]
+    new_cmp = LinearSegmentedColormap.from_list("chaos", c_list)
     plt.imshow(matrix, cmap=new_cmp)
 
     ax = plt.gca()
@@ -70,18 +66,22 @@ def plot_map(matrix: np.ndarray):
         for y in range(matrix.shape[0]):
             # 注意这里的matrix[y, x]不是matrix[x, y]
             info = int(matrix[y, x])
-            ax.text(x, y, info,
-                    verticalalignment='center',
-                    horizontalalignment='center',
-                    color="white" if info > thresh else "black")
-    ax.grid(which='minor', color='black', linestyle='-', linewidth=1.5)
+            ax.text(
+                x,
+                y,
+                info,
+                verticalalignment="center",
+                horizontalalignment="center",
+                color="white" if info > thresh else "black",
+            )
+    ax.grid(which="minor", color="black", linestyle="-", linewidth=1.5)
     plt.show()
     plt.close()
 
 
 def main():
     # bottom to top
-    dilated_rates = [1, 3, 5]   # 改这里
+    dilated_rates = [1, 3, 5]  # 改这里
     # init feature map
     size = 31
     m = np.zeros(shape=(size, size), dtype=np.int32)
@@ -97,5 +97,5 @@ def main():
     plot_map(m)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

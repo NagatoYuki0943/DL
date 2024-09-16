@@ -9,12 +9,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_class_preds(net,
-                     images_dir: str,
-                     transform,
-                     num_plot: int = 5, # 显示多少图片
-                     device="cpu"):
-
+def plot_class_preds(
+    net,
+    images_dir: str,
+    transform,
+    num_plot: int = 5,  # 显示多少图片
+    device="cpu",
+):
     # 图片
     if not os.path.exists(images_dir):
         print("not found {} path, ignore add figure.".format(images_dir))
@@ -27,9 +28,9 @@ def plot_class_preds(net,
         return None
 
     # 读取  类别索引和对应名称
-    json_label_path = './class_indices.json'
+    json_label_path = "./class_indices.json"
     assert os.path.exists(json_label_path), "not found {}".format(json_label_path)
-    json_file = open(json_label_path, 'r')
+    json_file = open(json_label_path, "r")
     # {"0": "daisy"}
     flower_class = json.load(json_file)
     # {"daisy": "0"}
@@ -40,14 +41,15 @@ def plot_class_preds(net,
     label_info = []
     with open(label_path, "r") as rd:
         for line in rd.readlines():
-            line = line.strip() # 去除空格
-            if len(line) > 0:   # 不是空行
-
+            line = line.strip()  # 去除空格
+            if len(line) > 0:  # 不是空行
                 # [图片名称, 类别]
                 split_info = [i for i in line.split(" ") if len(i) > 0]
-                assert len(split_info) == 2, "label format error, expect file_name and class_name"
-                image_name, class_name = split_info # 图片名称, 类别
-                image_path = os.path.join(images_dir, image_name)   # 图片路径
+                assert (
+                    len(split_info) == 2
+                ), "label format error, expect file_name and class_name"
+                image_name, class_name = split_info  # 图片名称, 类别
+                image_path = os.path.join(images_dir, image_name)  # 图片路径
                 # 如果文件不存在，则跳过
                 if not os.path.exists(image_path):
                     print("not found {}, skip.".format(image_path))
@@ -97,7 +99,9 @@ def plot_class_preds(net,
     fig = plt.figure(figsize=(num_imgs * 2.5, 3), dpi=100)
     for i in range(num_imgs):
         # 1：子图共1行，num_imgs:子图共num_imgs列，当前绘制第i+1个子图
-        ax = fig.add_subplot(1, num_imgs, i+1, xticks=[], yticks=[])    # xticks 刻度信息设置为空
+        ax = fig.add_subplot(
+            1, num_imgs, i + 1, xticks=[], yticks=[]
+        )  # xticks 刻度信息设置为空
 
         # CHW -> HWC
         npimg = images[i].cpu().numpy().transpose(1, 2, 0)
@@ -106,13 +110,13 @@ def plot_class_preds(net,
         # mean:[0.485, 0.456, 0.406], std:[0.229, 0.224, 0.225]
         npimg = (npimg * [0.229, 0.224, 0.225] + [0.485, 0.456, 0.406]) * 255
         print(npimg)
-        plt.imshow(npimg.astype('uint8'))
+        plt.imshow(npimg.astype("uint8"))
 
         # 设置标签,正确绿色,否则红色
         title = "{}, {:.2f}%\n(label: {})".format(
             flower_class[str(preds[i])],  # predict class
             probs[i] * 100,  # predict probability
-            flower_class[str(labels[i])]  # true class
+            flower_class[str(labels[i])],  # true class
         )
         ax.set_title(title, color=("green" if preds[i] == labels[i] else "red"))
 

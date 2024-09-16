@@ -3,6 +3,7 @@
 1.将voc数据集标注信息(.xml)转为yolo标注格式(.txt)，并将图像文件复制到相应文件夹
 2.根据json标签文件，生成对应names标签(my_data_label.names)
 """
+
 import os
 from tqdm import tqdm
 from lxml import etree
@@ -21,7 +22,7 @@ val_txt = "val.txt"
 save_file_root = "./yolo"
 
 # label标签对应json文件
-classes_path = './classes.txt'
+classes_path = "./classes.txt"
 
 # 拼接出voc的images目录，xml目录，txt目录
 voc_images_path = os.path.join(voc_root, voc_version, "JPEGImages")
@@ -54,7 +55,7 @@ def parse_xml_to_dict(xml):
     result = {}
     for child in xml:
         child_result = parse_xml_to_dict(child)  # 递归遍历标签信息
-        if child.tag != 'object':
+        if child.tag != "object":
             result[child.tag] = child_result[child.tag]
         else:
             if child.tag not in result:  # 因为object可能有多个，所以需要放入列表里
@@ -63,7 +64,7 @@ def parse_xml_to_dict(xml):
     return {xml.tag: result}
 
 
-def translate_info(file_names: list, save_root: str, classes: dict, train_val='train'):
+def translate_info(file_names: list, save_root: str, classes: dict, train_val="train"):
     """
     将对应xml文件信息转为yolo中使用的txt文件信息
     :param file_names:  txt中保存的文件名，不包含扩展名
@@ -73,7 +74,7 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
     :return:
     """
 
-    #------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------#
     # yolov5 v8的格式
     #   yaml:
     #       path: ../datasets/coco128   # dataset root dir
@@ -89,11 +90,11 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
     #           └── labels
     #               ├── train2017   # 训练标签txt
     #               └── val2017     # 验证标签txt
-    #------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------#
     # save_images_path = os.path.join(save_root, "images", train_val)
     # save_txt_path    = os.path.join(save_root, "labels", train_val)
 
-    #------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------#
     # yolov5 v8另的一种图片目录格式
     #   yaml:
     #       path: ../datasets/coco128   # dataset root dir
@@ -112,9 +113,9 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
     #           └── test
     #               ├── images  # 测试图片
     #               └── labels  # 测试标签txt
-    #------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------#
     save_images_path = os.path.join(save_root, train_val, "images")
-    save_txt_path    = os.path.join(save_root, train_val, "labels")
+    save_txt_path = os.path.join(save_root, train_val, "labels")
 
     if os.path.exists(save_txt_path) is False:
         os.makedirs(save_txt_path)
@@ -139,13 +140,17 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
         img_width = int(data["size"]["width"])
 
         # write object info into txt
-        assert "object" in data.keys(), "file: '{}' lack of object key.".format(xml_path)
+        assert "object" in data.keys(), "file: '{}' lack of object key.".format(
+            xml_path
+        )
         if len(data["object"]) == 0:
             # 如果xml文件中没有目标就直接忽略该样本
             print("Warning: in '{}' xml, there are no objects.".format(xml_path))
             continue
 
-        with open(os.path.join(save_txt_path, file + ".txt"), "w", encoding="utf-8") as f:
+        with open(
+            os.path.join(save_txt_path, file + ".txt"), "w", encoding="utf-8"
+        ) as f:
             for index, obj in enumerate(data["object"]):
                 # 获取每个object的box信息
                 xmin = float(obj["bndbox"]["xmin"])
@@ -153,11 +158,15 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
                 ymin = float(obj["bndbox"]["ymin"])
                 ymax = float(obj["bndbox"]["ymax"])
                 class_name = obj["name"]
-                class_index = classes.index(class_name)    # 0 1 2 ...
+                class_index = classes.index(class_name)  # 0 1 2 ...
 
                 # 进一步检查数据，有的标注信息中可能有w或h为0的情况，这样的数据会导致计算回归loss为nan
                 if xmax <= xmin or ymax <= ymin:
-                    print("Warning: in '{}' xml, there are some bbox w/h <=0".format(xml_path))
+                    print(
+                        "Warning: in '{}' xml, there are some bbox w/h <=0".format(
+                            xml_path
+                        )
+                    )
                     continue
 
                 # 将box信息转换到yolo格式
@@ -185,11 +194,11 @@ def translate_info(file_names: list, save_root: str, classes: dict, train_val='t
             shutil.copy(img_path, path_copy_to)
 
 
-#---------------------------------------------------#
+# ---------------------------------------------------#
 #   获得类
-#---------------------------------------------------#
+# ---------------------------------------------------#
 def get_classes(classes_path):
-    with open(classes_path, mode="r", encoding='utf-8') as f:
+    with open(classes_path, mode="r", encoding="utf-8") as f:
         class_names = f.readlines()
     class_names = [c.strip() for c in class_names]
     return class_names, len(class_names)

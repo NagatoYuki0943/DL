@@ -12,21 +12,39 @@ from .feature_pyramid_network import FeaturePyramidNetwork, LastLevelMaxPool
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channel, out_channel, stride=1, downsample=None, norm_layer=None):
+    def __init__(
+        self, in_channel, out_channel, stride=1, downsample=None, norm_layer=None
+    ):
         super(Bottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
 
-        self.conv1 = nn.Conv2d(in_channels=in_channel, out_channels=out_channel,
-                               kernel_size=1, stride=1, bias=False)  # squeeze channels
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channel,
+            out_channels=out_channel,
+            kernel_size=1,
+            stride=1,
+            bias=False,
+        )  # squeeze channels
         self.bn1 = norm_layer(out_channel)
         # -----------------------------------------
-        self.conv2 = nn.Conv2d(in_channels=out_channel, out_channels=out_channel,
-                               kernel_size=3, stride=stride, bias=False, padding=1)
+        self.conv2 = nn.Conv2d(
+            in_channels=out_channel,
+            out_channels=out_channel,
+            kernel_size=3,
+            stride=stride,
+            bias=False,
+            padding=1,
+        )
         self.bn2 = norm_layer(out_channel)
         # -----------------------------------------
-        self.conv3 = nn.Conv2d(in_channels=out_channel, out_channels=out_channel * self.expansion,
-                               kernel_size=1, stride=1, bias=False)  # unsqueeze channels
+        self.conv3 = nn.Conv2d(
+            in_channels=out_channel,
+            out_channels=out_channel * self.expansion,
+            kernel_size=1,
+            stride=1,
+            bias=False,
+        )  # unsqueeze channels
         self.bn3 = norm_layer(out_channel * self.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
@@ -54,8 +72,9 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
-    def __init__(self, block, blocks_num, num_classes=1000, include_top=True, norm_layer=None):
+    def __init__(
+        self, block, blocks_num, num_classes=1000, include_top=True, norm_layer=None
+    ):
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -64,8 +83,9 @@ class ResNet(nn.Module):
         self.include_top = include_top
         self.in_channel = 64
 
-        self.conv1 = nn.Conv2d(3, self.in_channel, kernel_size=7, stride=2,
-                               padding=3, bias=False)
+        self.conv1 = nn.Conv2d(
+            3, self.in_channel, kernel_size=7, stride=2, padding=3, bias=False
+        )
         self.bn1 = norm_layer(self.in_channel)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -79,19 +99,33 @@ class ResNet(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
 
     def _make_layer(self, block, channel, block_num, stride=1):
         norm_layer = self._norm_layer
         downsample = None
         if stride != 1 or self.in_channel != channel * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.in_channel, channel * block.expansion, kernel_size=1, stride=stride, bias=False),
-                norm_layer(channel * block.expansion))
+                nn.Conv2d(
+                    self.in_channel,
+                    channel * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                norm_layer(channel * block.expansion),
+            )
 
         layers = []
-        layers.append(block(self.in_channel, channel, downsample=downsample,
-                            stride=stride, norm_layer=norm_layer))
+        layers.append(
+            block(
+                self.in_channel,
+                channel,
+                downsample=downsample,
+                stride=stride,
+                norm_layer=norm_layer,
+            )
+        )
         self.in_channel = channel * block.expansion
 
         for _ in range(1, block_num):
@@ -153,12 +187,15 @@ class IntermediateLayerGetter(nn.ModuleDict):
             the key of the dict, and the value of the dict is the name
             of the returned activation (which the user can specify).
     """
+
     __annotations__ = {
         "return_layers": Dict[str, str],
     }
 
     def __init__(self, model, return_layers):
-        if not set(return_layers).issubset([name for name, _ in model.named_children()]):
+        if not set(return_layers).issubset(
+            [name for name, _ in model.named_children()]
+        ):
             raise ValueError("return_layers are not present in model")
 
         orig_return_layers = return_layers
@@ -209,7 +246,9 @@ class BackboneWithFPN(nn.Module):
         out_channels (int): the number of channels in the FPN
     """
 
-    def __init__(self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None):
+    def __init__(
+        self, backbone, return_layers, in_channels_list, out_channels, extra_blocks=None
+    ):
         super(BackboneWithFPN, self).__init__()
 
         if extra_blocks is None:
@@ -230,11 +269,13 @@ class BackboneWithFPN(nn.Module):
         return x
 
 
-def resnet50_fpn_backbone(pretrain_path="",
-                          norm_layer=FrozenBatchNorm2d,  # FrozenBatchNorm2d的功能与BatchNorm2d类似，但参数无法更新
-                          trainable_layers=3,
-                          returned_layers=None,
-                          extra_blocks=None):
+def resnet50_fpn_backbone(
+    pretrain_path="",
+    norm_layer=FrozenBatchNorm2d,  # FrozenBatchNorm2d的功能与BatchNorm2d类似，但参数无法更新
+    trainable_layers=3,
+    returned_layers=None,
+    extra_blocks=None,
+):
     """
     搭建resnet50_fpn——backbone
     Args:
@@ -249,9 +290,9 @@ def resnet50_fpn_backbone(pretrain_path="",
     Returns:
 
     """
-    resnet_backbone = ResNet(Bottleneck, [3, 4, 6, 3],
-                             include_top=False,
-                             norm_layer=norm_layer)
+    resnet_backbone = ResNet(
+        Bottleneck, [3, 4, 6, 3], include_top=False, norm_layer=norm_layer
+    )
 
     if isinstance(norm_layer, FrozenBatchNorm2d):
         overwrite_eps(resnet_backbone, 0.0)
@@ -263,7 +304,9 @@ def resnet50_fpn_backbone(pretrain_path="",
 
     # select layers that wont be frozen
     assert 0 <= trainable_layers <= 5
-    layers_to_train = ['layer4', 'layer3', 'layer2', 'layer1', 'conv1'][:trainable_layers]
+    layers_to_train = ["layer4", "layer3", "layer2", "layer1", "conv1"][
+        :trainable_layers
+    ]
 
     # 如果要训练所有层结构的话，不要忘了conv1后还有一个bn1
     if trainable_layers == 5:
@@ -284,7 +327,7 @@ def resnet50_fpn_backbone(pretrain_path="",
     assert min(returned_layers) > 0 and max(returned_layers) < 5
 
     # return_layers = {'layer1': '0', 'layer2': '1', 'layer3': '2', 'layer4': '3'}
-    return_layers = {f'layer{k}': str(v) for v, k in enumerate(returned_layers)}
+    return_layers = {f"layer{k}": str(v) for v, k in enumerate(returned_layers)}
 
     # in_channel 为layer4的输出特征矩阵channel = 2048
     in_channels_stage2 = resnet_backbone.in_channel // 8  # 256
@@ -292,4 +335,10 @@ def resnet50_fpn_backbone(pretrain_path="",
     in_channels_list = [in_channels_stage2 * 2 ** (i - 1) for i in returned_layers]
     # 通过fpn后得到的每个特征层的channel
     out_channels = 256
-    return BackboneWithFPN(resnet_backbone, return_layers, in_channels_list, out_channels, extra_blocks=extra_blocks)
+    return BackboneWithFPN(
+        resnet_backbone,
+        return_layers,
+        in_channels_list,
+        out_channels,
+        extra_blocks=extra_blocks,
+    )

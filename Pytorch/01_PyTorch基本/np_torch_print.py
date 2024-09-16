@@ -1,11 +1,12 @@
 """
 设置打印数量,精度等
 """
+
 import numpy as np
 import torch
 
 
-x = np.arange(1001.)
+x = np.arange(1001.0)
 print(x)
 # [   0.    1.    2. ...  998.  999. 1000.]
 x_t = torch.from_numpy(x)

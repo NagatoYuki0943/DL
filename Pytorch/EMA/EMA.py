@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from copy import deepcopy
+
 torch.manual_seed(0)
 
 
 class EMA:
-    def __init__(self, beta: float=0.995):
+    def __init__(self, beta: float = 0.995):
         assert beta > 0 and beta < 1
         self.beta = beta
 
@@ -33,11 +34,7 @@ def test_ema():
 
 
 class EMAModel(nn.Module):
-    def __init__(
-        self,
-        ma_model: nn.Module = None,
-        beta: float = 0.995
-    ) -> None:
+    def __init__(self, ma_model: nn.Module = None, beta: float = 0.995) -> None:
         super().__init__()
         assert beta > 0 and beta < 1
         self.beta = beta
@@ -62,11 +59,17 @@ class EMAModel(nn.Module):
             self.ma_model = deepcopy(current_model)
             self.no_requires_grad()
         else:
-            with torch.no_grad():   # 非必须使用 no_grad
-                for ma_parameters, current_parameters in \
-                        zip(self.ma_model.parameters(), current_model.parameters()):
-                    ma_weight, current_weight = ma_parameters.data, current_parameters.data
-                    ma_parameters.data = self.update_moving_average(ma_weight, current_weight)
+            with torch.no_grad():  # 非必须使用 no_grad
+                for ma_parameters, current_parameters in zip(
+                    self.ma_model.parameters(), current_model.parameters()
+                ):
+                    ma_weight, current_weight = (
+                        ma_parameters.data,
+                        current_parameters.data,
+                    )
+                    ma_parameters.data = self.update_moving_average(
+                        ma_weight, current_weight
+                    )
 
 
 # 初始化ema_model
@@ -103,7 +106,6 @@ def test_mea_model1():
     print_state_dict()
     # {'weight': tensor([[-0.0150]], device='cuda:0'), 'bias': tensor([1.0729], device='cuda:0')}
     # {'weight': tensor([[-0.0075]], device='cuda:0'), 'bias': tensor([0.5364], device='cuda:0')}
-
 
     # 更新ema_model
     ema_model.update(model)
@@ -164,6 +166,7 @@ def test_mea_model2():
     # True
     # False
     # False
+
 
 if __name__ == "__main__":
     test_ema()

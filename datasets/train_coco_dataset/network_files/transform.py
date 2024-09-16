@@ -12,14 +12,19 @@ from .image_list import ImageList
 def _resize_image_onnx(image, self_min_size, self_max_size):
     # type: (Tensor, float, float) -> Tensor
     from torch.onnx import operators
+
     im_shape = operators.shape_as_tensor(image)[-2:]
     min_size = torch.min(im_shape).to(dtype=torch.float32)
     max_size = torch.max(im_shape).to(dtype=torch.float32)
     scale_factor = torch.min(self_min_size / min_size, self_max_size / max_size)
 
     image = torch.nn.functional.interpolate(
-        image[None], scale_factor=scale_factor, mode="bilinear", recompute_scale_factor=True,
-        align_corners=False)[0]
+        image[None],
+        scale_factor=scale_factor,
+        mode="bilinear",
+        recompute_scale_factor=True,
+        align_corners=False,
+    )[0]
 
     return image
 
@@ -27,20 +32,28 @@ def _resize_image_onnx(image, self_min_size, self_max_size):
 def _resize_image(image, self_min_size, self_max_size):
     # type: (Tensor, float, float) -> Tensor
     im_shape = torch.tensor(image.shape[-2:])
-    min_size = float(torch.min(im_shape))    # 获取高宽中的最小值
-    max_size = float(torch.max(im_shape))    # 获取高宽中的最大值
-    scale_factor = self_min_size / min_size  # 根据指定最小边长和图片最小边长计算缩放比例
+    min_size = float(torch.min(im_shape))  # 获取高宽中的最小值
+    max_size = float(torch.max(im_shape))  # 获取高宽中的最大值
+    scale_factor = (
+        self_min_size / min_size
+    )  # 根据指定最小边长和图片最小边长计算缩放比例
 
     # 如果使用该缩放比例计算的图片最大边长大于指定的最大边长
     if max_size * scale_factor > self_max_size:
-        scale_factor = self_max_size / max_size  # 将缩放比例设为指定最大边长和图片最大边长之比
+        scale_factor = (
+            self_max_size / max_size
+        )  # 将缩放比例设为指定最大边长和图片最大边长之比
 
     # interpolate利用插值的方法缩放图片
     # image[None]操作是在最前面添加batch维度[C, H, W] -> [1, C, H, W]
     # bilinear只支持4D Tensor
     image = torch.nn.functional.interpolate(
-        image[None], scale_factor=scale_factor, mode="bilinear", recompute_scale_factor=True,
-        align_corners=False)[0]
+        image[None],
+        scale_factor=scale_factor,
+        mode="bilinear",
+        recompute_scale_factor=True,
+        align_corners=False,
+    )[0]
 
     return image
 
@@ -61,10 +74,10 @@ class GeneralizedRCNNTransform(nn.Module):
         super(GeneralizedRCNNTransform, self).__init__()
         if not isinstance(min_size, (list, tuple)):
             min_size = (min_size,)
-        self.min_size = min_size      # 指定图像的最小边长范围
-        self.max_size = max_size      # 指定图像的最大边长范围
+        self.min_size = min_size  # 指定图像的最小边长范围
+        self.max_size = max_size  # 指定图像的最大边长范围
         self.image_mean = image_mean  # 指定图像在标准化处理中的均值
-        self.image_std = image_std    # 指定图像在标准化处理中的方差
+        self.image_std = image_std  # 指定图像在标准化处理中的方差
 
     def normalize(self, image):
         """标准化处理"""
@@ -81,7 +94,7 @@ class GeneralizedRCNNTransform(nn.Module):
         TorchScript. Remove if https://github.com/pytorch/pytorch/issues/25803
         is fixed.
         """
-        index = int(torch.empty(1).uniform_(0., float(len(k))).item())
+        index = int(torch.empty(1).uniform_(0.0, float(len(k))).item())
         return k[index]
 
     def resize(self, image, target):
@@ -100,10 +113,14 @@ class GeneralizedRCNNTransform(nn.Module):
         h, w = image.shape[-2:]
 
         if self.training:
-            size = float(self.torch_choice(self.min_size))  # 指定输入图片的最小边长,注意是self.min_size不是min_size
+            size = float(
+                self.torch_choice(self.min_size)
+            )  # 指定输入图片的最小边长,注意是self.min_size不是min_size
         else:
             # FIXME assume for now that testing uses the largest scale
-            size = float(self.min_size[-1])    # 指定输入图片的最小边长,注意是self.min_size不是min_size
+            size = float(
+                self.min_size[-1]
+            )  # 指定输入图片的最小边长,注意是self.min_size不是min_size
 
         if torchvision._is_tracing():
             image = _resize_image_onnx(image, size, float(self.max_size))
@@ -127,11 +144,17 @@ class GeneralizedRCNNTransform(nn.Module):
         # type: (List[Tensor], int) -> Tensor
         max_size = []
         for i in range(images[0].dim()):
-            max_size_i = torch.max(torch.stack([img.shape[i] for img in images]).to(torch.float32)).to(torch.int64)
+            max_size_i = torch.max(
+                torch.stack([img.shape[i] for img in images]).to(torch.float32)
+            ).to(torch.int64)
             max_size.append(max_size_i)
         stride = size_divisible
-        max_size[1] = (torch.ceil((max_size[1].to(torch.float32)) / stride) * stride).to(torch.int64)
-        max_size[2] = (torch.ceil((max_size[2].to(torch.float32)) / stride) * stride).to(torch.int64)
+        max_size[1] = (
+            torch.ceil((max_size[1].to(torch.float32)) / stride) * stride
+        ).to(torch.int64)
+        max_size[2] = (
+            torch.ceil((max_size[2].to(torch.float32)) / stride) * stride
+        ).to(torch.int64)
         max_size = tuple(max_size)
 
         # work around for
@@ -140,7 +163,9 @@ class GeneralizedRCNNTransform(nn.Module):
         padded_imgs = []
         for img in images:
             padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
-            padded_img = torch.nn.functional.pad(img, [0, padding[2], 0, padding[1], 0, padding[0]])
+            padded_img = torch.nn.functional.pad(
+                img, [0, padding[2], 0, padding[1], 0, padding[0]]
+            )
             padded_imgs.append(padded_img)
 
         return torch.stack(padded_imgs)
@@ -193,11 +218,12 @@ class GeneralizedRCNNTransform(nn.Module):
 
         return batched_imgs
 
-    def postprocess(self,
-                    result,                # type: List[Dict[str, Tensor]]
-                    image_shapes,          # type: List[Tuple[int, int]]
-                    original_image_sizes   # type: List[Tuple[int, int]]
-                    ):
+    def postprocess(
+        self,
+        result,  # type: List[Dict[str, Tensor]]
+        image_shapes,  # type: List[Tuple[int, int]]
+        original_image_sizes,  # type: List[Tuple[int, int]]
+    ):
         # type: (...) -> List[Dict[str, Tensor]]
         """
         对网络的预测结果进行后处理（主要将bboxes还原到原图像尺度上）
@@ -213,7 +239,9 @@ class GeneralizedRCNNTransform(nn.Module):
             return result
 
         # 遍历每张图片的预测信息，将boxes信息还原回原尺度
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+        for i, (pred, im_s, o_im_s) in enumerate(
+            zip(result, image_shapes, original_image_sizes)
+        ):
             boxes = pred["boxes"]
             boxes = resize_boxes(boxes, im_s, o_im_s)  # 将bboxes缩放回原图像尺度上
             result[i]["boxes"] = boxes
@@ -221,18 +249,24 @@ class GeneralizedRCNNTransform(nn.Module):
 
     def __repr__(self):
         """自定义输出实例化对象的信息，可通过print打印实例信息"""
-        format_string = self.__class__.__name__ + '('
-        _indent = '\n    '
-        format_string += "{0}Normalize(mean={1}, std={2})".format(_indent, self.image_mean, self.image_std)
-        format_string += "{0}Resize(min_size={1}, max_size={2}, mode='bilinear')".format(_indent, self.min_size,
-                                                                                         self.max_size)
-        format_string += '\n)'
+        format_string = self.__class__.__name__ + "("
+        _indent = "\n    "
+        format_string += "{0}Normalize(mean={1}, std={2})".format(
+            _indent, self.image_mean, self.image_std
+        )
+        format_string += (
+            "{0}Resize(min_size={1}, max_size={2}, mode='bilinear')".format(
+                _indent, self.min_size, self.max_size
+            )
+        )
+        format_string += "\n)"
         return format_string
 
-    def forward(self,
-                images,       # type: List[Tensor]
-                targets=None  # type: Optional[List[Dict[str, Tensor]]]
-                ):
+    def forward(
+        self,
+        images,  # type: List[Tensor]
+        targets=None,  # type: Optional[List[Dict[str, Tensor]]]
+    ):
         # type: (...) -> Tuple[ImageList, Optional[List[Dict[str, Tensor]]]]
         images = [img for img in images]
         for i in range(len(images)):
@@ -240,10 +274,14 @@ class GeneralizedRCNNTransform(nn.Module):
             target_index = targets[i] if targets is not None else None
 
             if image.dim() != 3:
-                raise ValueError("images is expected to be a list of 3d tensors "
-                                 "of shape [C, H, W], got {}".format(image.shape))
-            image = self.normalize(image)                # 对图像进行标准化处理
-            image, target_index = self.resize(image, target_index)   # 对图像和对应的bboxes缩放到指定范围
+                raise ValueError(
+                    "images is expected to be a list of 3d tensors "
+                    "of shape [C, H, W], got {}".format(image.shape)
+                )
+            image = self.normalize(image)  # 对图像进行标准化处理
+            image, target_index = self.resize(
+                image, target_index
+            )  # 对图像和对应的bboxes缩放到指定范围
             images[i] = image
             if targets is not None and target_index is not None:
                 targets[i] = target_index
@@ -271,8 +309,8 @@ def resize_boxes(boxes, original_size, new_size):
         new_size: 图像缩放后的尺寸
     """
     ratios = [
-        torch.tensor(s, dtype=torch.float32, device=boxes.device) /
-        torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
+        torch.tensor(s, dtype=torch.float32, device=boxes.device)
+        / torch.tensor(s_orig, dtype=torch.float32, device=boxes.device)
         for s, s_orig in zip(new_size, original_size)
     ]
     ratios_height, ratios_width = ratios
@@ -284,11 +322,3 @@ def resize_boxes(boxes, original_size, new_size):
     ymin = ymin * ratios_height
     ymax = ymax * ratios_height
     return torch.stack((xmin, ymin, xmax, ymax), dim=1)
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-'''
+"""
 Sequential, ModuleDict, ModuleList 都继承自 Module
 
 nn.ModuleList 就是Module列表,可以迭代获取
@@ -15,7 +15,7 @@ def append(self, module: Module) -> 'ModuleList':
 
 def extend(self, modules: Iterable[Module]) -> 'ModuleList':
     pass
-'''
+"""
 
 import torch
 from torch import nn
@@ -23,7 +23,6 @@ from collections import OrderedDict
 
 
 class MyModule1(nn.Module):
-
     def __init__(self):
         super().__init__()
         self.linears = nn.ModuleList([nn.Linear(10, 10) for i in range(10)])
@@ -42,25 +41,26 @@ class MyModule1(nn.Module):
 
         return x
 
+
 x = torch.rand(2, 10)
 model = MyModule1()
 y = model(x)
-print(y.size())     # torch.Size([2, 10])
+print(y.size())  # torch.Size([2, 10])
 
 
-#--------------------------------------------#
+# --------------------------------------------#
 #   Sequential可以执行
-#--------------------------------------------#
+# --------------------------------------------#
 x = torch.rand(2, 3, 128, 128)
 model = nn.Sequential(*[nn.Conv2d(3, 64, 1), nn.BatchNorm2d(64), nn.ReLU()])
 y = model(x)
-print(y.size()) # torch.Size([2, 64, 128, 128])
+print(y.size())  # torch.Size([2, 64, 128, 128])
 
 
-#--------------------------------------------#
+# --------------------------------------------#
 #   ModuleList无法执行,只能取出来单独执行
-#--------------------------------------------#
+# --------------------------------------------#
 x = torch.rand(2, 3, 128, 128)
 model = nn.ModuleList([nn.Conv2d(3, 64, 1), nn.BatchNorm2d(64), nn.ReLU()])
 y = model(x)
-print(y.size()) # 报错
+print(y.size())  # 报错
