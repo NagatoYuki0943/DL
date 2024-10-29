@@ -1,3 +1,21 @@
+# conda和pip
+
+1. conda可以管理非python包，pip只能管理python包。
+2. conda可以用来创建虚拟环境，pip不能，需要依赖virtualenv之类的包。
+3. conda安装的包是编译好的**二进制文件**，安装包文件过程中会自动安装依赖包；pip安装的包是**wheel或源码**，安装过程中不会去支持python语言之外的依赖项。
+4. conda安装的包会统一下载到当前虚拟环境对应的目录下，下载一次多次安装。pip是直接下载到对应环境中。
+
+> **Wheel** 是一种 Python 安装包的格式。
+>
+> 它是一种预编译的二进制分发格式，类似于 conda 中的已编译二进制文件。
+>
+> Wheel 格式的主要优点包括：
+>
+> 1. 安装速度快：因为已经进行了预编译，所以在安装时不需要像源码安装那样进行编译过程，节省了时间。
+> 2. 一致性：确保在不同的系统和环境中安装的结果是一致的。
+>
+> 例如，如果您要安装一个大型的 Python 库，使用 Wheel 格式可以避免在不同的机器上因为编译环境的差异而导致的安装问题。而且，对于那些没有编译环境或者编译能力较弱的系统，Wheel 格式能够让安装过程更加顺畅。
+
 # 下载
 
 [miniconda](https://docs.conda.io/en/latest/miniconda.html)
@@ -62,6 +80,22 @@ conda config --show
 
 # 配置
 
+## 版本
+
+我们可以使用`conda --version`来查看当前开发机中`conda`的版本信息
+
+```sh
+conda --version
+```
+
+## 配置信息
+
+查看conda的配置信息可以使用`conda config --show`命令
+
+```sh
+conda config --show
+```
+
 ## 配置文件
 
 > `~/.condarc` 保存 代理,是否进入base环境等
@@ -117,8 +151,11 @@ conda config --set changeps1 False
 ```shell
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
 ```
 
 > 设置启动设置好的国内镜像源
@@ -168,16 +205,24 @@ conda activate 环境名
 ## 退出环境
 
 ```shell
+conda activate
 conda deactivate
 ```
 
-
+这两条命令都会回到`base`环境，因为`base`是conda的基础环境，如果仔细观察的话，`base`环境目录比其他的虚拟环境目录层级要高。
 
 ## 创建虚拟环境 **conda create -n 环境名 python=3.9**
 
 ```shell
 conda create -n/--name=env_name python=3.10
 ```
+
+创建虚拟环境的常用参数如下：
+
+- -n 或 --name：指定要创建的环境名称。
+- -c 或 --channel：指定额外的软件包通道。
+- --clone：从现有的环境克隆来创建新环境。
+- -p 或 --prefix：指定环境的安装路径（非默认位置）。
 
 > 建完成后目录文件夹会生成在Anaconda3/Miniconda3的安装目录envs下边
 >
@@ -187,18 +232,25 @@ conda create -n/--name=env_name python=3.10
 
 ## 删除虚拟环境 **conda remove -n 环境名 --all**
 
+如果想要删除某个虚拟环境可以使用
+
 ```shell
 conda remove -n/--name=env_name --all
+```
+
+如果只删除虚拟环境中的某个或者某些包可以使用
+
+```sh
+conda remove --name name package_name
 ```
 
 ## 列出所有可用环境 **conda env list**
 
 ```shell
 conda env list
+conda info -e
 conda info --envs
 ```
-
-
 
 ## 从旧的环境克隆出一个新环境
 
