@@ -360,3 +360,48 @@ conda config --set auto_activate_base false
 > (old)解决办法： 在vscode设置中搜索python.terminal.activateEnvironment，取消勾选就不会自动进入虚拟环境了(PS:上面的命令在linux上即使进入虚拟环境也不报错)
 >
 > (new)最新版vscode运行python文件和pycharm相同了,`D:\Anaconda3\envs\ai\python.exe E:/ai/test.py`,没问题了
+
+# mamba
+
+### **更新conda**
+
+libmamba 求解器的实验标志已被删除。要使用新的求解器，请在您的基础环境中更新 conda：
+
+```sh
+conda update --name base conda
+```
+
+### **要安装并设置新的求解器，请运行以下命令：**
+
+```sh
+conda install --name base conda-libmamba-solver
+conda config --set solver libmamba
+```
+
+### 安装mamba
+
+```sh
+conda install mamba --name base -c conda-forge
+```
+
+### mamba常用命令
+
+mamba 与conda 创建一个独立的 python 环境步骤一样，首先需要创建一个环境，然后激活环境。
+
+mamba 创建环境： mamba create --name XXX python=3.12
+
+激活环境：conda activate XXX
+
+退出环境：conda deactivate xxx
+
+安装包：mamba install xxx
+
+移除包：mamba/conda remove --name xxx XXX 第一个为环境名称，第二个为包名称
+
+更新包：mamba update XXX
+
+更新python：mamba update python
+
+移除环境： conda/mamba remove --name XXX --all
+
+导出环境： conda env export xxx.yaml 将现有的包导出，方便以后直接创建环境
