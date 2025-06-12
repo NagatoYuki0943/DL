@@ -171,6 +171,65 @@ Add the following to the end of `~/.config/fish/config.fish`:
 pixi completion --shell fish | source
 ```
 
+# config
+
+## detached-environments
+
+**default location**
+
+cmd
+
+```shell
+pixi config set detached-environments true
+```
+
+config.toml
+
+```
+detached-environments = true
+```
+
+or:
+
+**custom location**
+
+cmd
+
+```shell
+pixi config set detached-environments /opt/pixi/envs
+```
+
+config.toml
+
+```
+detached-environments = "/opt/pixi/envs"
+```
+
+`pixi config help`
+
+```shell
+Configuration management
+
+Usage: pixi.exe config [OPTIONS] <COMMAND>
+
+Commands:
+  edit     Edit the configuration file
+  list     List configuration values [aliases: ls]
+  prepend  Prepend a value to a list configuration key
+  append   Append a value to a list configuration key
+  set      Set a configuration value
+  unset    Unset a configuration value
+  help     Print this message or the help of the given subcommand(s)
+
+Global Options:
+  -h, --help           Display help information
+  -v, --verbose...     Increase logging verbosity (-v for warnings, -vv for info, -vvv for debug, -vvvv for trace)
+  -q, --quiet...       Decrease logging verbosity (quiet mode)
+      --color <COLOR>  Whether the log needs to be colored [env: PIXI_COLOR=] [default: auto] [possible values: always,
+                       never, auto]
+      --no-progress    Hide all progress bars, always turned on if stderr is not a terminal [env: PIXI_NO_PROGRESS=]
+```
+
 # init
 
 初始化
@@ -198,10 +257,6 @@ pixi init
 - **环境可复现**：确保所有依赖的版本与 `pixi.lock` 文件一致，从而实现环境的可复现性和一致性。
 - **支持多环境**：如果项目定义了多个环境（如 `default`、`test`、`lint` 等），可以通过参数选择要安装的环境。
 
-# list
-
-列出安装的包
-
 # add
 
 往虚拟环境中添加包
@@ -210,7 +265,82 @@ pixi init
 pixi add python numpy pytest
 pixi add numpy=1.23.5
 pixi add 'numpy>=1.20,<1.24'
+
+# 使用 pypi 安装
+pixi add numpy --pypi
+# 安装 pypi 可选项
+pixi add "flask[async]==3.1.0" --pypi
 ```
+
+## 安装 pytorch(cuda)
+
+[Pytorch Installation - Pixi by prefix.dev](https://pixi.sh/dev/python/pytorch/#troubleshooting)
+
+### Installing from PyPi
+
+最新版本 pytorch 只提供 pypi 包，因此只推荐这种用法
+
+` pyproject.toml`
+
+```toml
+[tool.pixi.pypi-dependencies]
+torch = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.22.1", index = "https://download.pytorch.org/whl/cu128" }
+torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cu128" }
+```
+
+### Installing from Conda-forge
+
+` pyproject.toml`
+
+```toml
+[tool.pixi.system-requirements]
+cuda = "12.0"
+
+[tool.pixi.dependencies]
+pytorch-gpu = "*"
+cuda-version = "12.4.*"
+```
+
+### Installing from PyTorch channel
+
+ `pyproject.toml`
+
+```toml
+[tool.pixi.project]
+# `main` is not free! It's a paid channel for organizations over 200 people.
+channels = ["main", "nvidia", "pytorch"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
+
+[tool.pixi.feature.gpu.system-requirements]
+cuda = "12.0"
+
+[tool.pixi.dependencies]
+pytorch = "*"
+
+[tool.pixi.environments]
+gpu = ["gpu"]
+```
+
+## 安装 pytorch(xpu)
+
+### Installing from PyPi
+
+https://pytorch-extension.intel.com/installation
+
+` pyproject.toml`
+
+```toml
+[tool.pixi.pypi-dependencies]
+torch = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/xpu" }
+torchvision = { version = ">=0.22.1", index = "https://download.pytorch.org/whl/xpu" }
+torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/xpu" }
+intel-extension-for-pytorch = { version = ">=2.7.10", index = "https://pytorch-extension.intel.com/release-whl/stable/xpu/us/" }
+```
+
+# list
+
+列出安装的包
 
 # update
 
@@ -253,15 +383,17 @@ pixi upgrade numpy
 
 # remove
 
-```
+```shell
 pixi remove numpy
+# 移除 pypi 包
+pixi add numpy --pypi
 ```
 
 # search
 
 查询 conda 包
 
-```sh
+```shell
 pixi search numpy
 ```
 
