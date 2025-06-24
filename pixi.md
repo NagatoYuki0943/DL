@@ -289,6 +289,8 @@ torchvision = { version = ">=0.22.1", index = "https://download.pytorch.org/whl/
 torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cu128" }
 ```
 
+然后 `pixi install` 
+
 ### Installing from Conda-forge
 
 ` pyproject.toml`
@@ -301,6 +303,8 @@ cuda = "12.0"
 pytorch-gpu = "*"
 cuda-version = "12.4.*"
 ```
+
+然后 `pixi install` 
 
 ### Installing from PyTorch channel
 
@@ -322,6 +326,8 @@ pytorch = "*"
 gpu = ["gpu"]
 ```
 
+然后 `pixi install` 
+
 ## 安装 pytorch(xpu)
 
 ### Installing from PyPi
@@ -337,6 +343,8 @@ torchvision = { version = ">=0.22.1", index = "https://download.pytorch.org/whl/
 torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/xpu" }
 intel-extension-for-pytorch = { version = ">=2.7.10", index = "https://pytorch-extension.intel.com/release-whl/stable/xpu/us/" }
 ```
+
+然后 `pixi install` 
 
 # list
 

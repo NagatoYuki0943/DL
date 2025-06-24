@@ -210,7 +210,7 @@ Add dependencies to the project
 - 用法：`uv add [包名]`
 - 功能：将指定依赖添加到 `pyproject.toml`，并自动解析依赖、更新锁文件和虚拟环境。支持添加普通依赖、开发依赖（`--dev`）、可选依赖（`--optional`）、指定版本、指定源（如 Git、路径、本地文件）等[3](https://docs.astral.sh/uv/concepts/projects/dependencies/),[10](https://docs.astral.sh/uv/reference/cli/),[11](https://gihyo.jp/article/2024/09/monthly-python-2409),[12](https://www.datacamp.com/tutorial/python-uv)。
 
-```python
+```shell
 uv add numpy
 uv add pandas==2.2.0
 ```
@@ -223,21 +223,19 @@ uv add pandas==2.2.0
 
   - 升级到最新版：
 
-    ```
-    bash
+    ```shell
     uv add requests
     ```
-
+    
     这会将 `requests` 升级到可用的最新版本，并自动更新 `pyproject.toml` 和 `uv.lock` 文件[5](https://www.datacamp.com/tutorial/python-uv)。
-
+    
   - 升级到指定版本：
-
-    ```
-    bash
+  
+    ```shell
     uv add requests==2.31.0
     ```
-
-    这样可以精确锁定依赖版本[5](https://www.datacamp.com/tutorial/python-uv)。
+    
+  这样可以精确锁定依赖版本[5](https://www.datacamp.com/tutorial/python-uv)。
 
 ------
 
@@ -247,21 +245,19 @@ uv add pandas==2.2.0
 
   - 使用 `uv lock --upgrade`：
 
-    ```
-    bash
+    ```shell
     uv lock --upgrade
     ```
-
+    
     该命令会将所有已锁定依赖升级到其允许的最新版本，并更新 `uv.lock` 文件，但不会自动修改 `pyproject.toml` 里的版本约束[4](https://github.com/astral-sh/uv/issues/6692)。
-
+    
   - 之后运行 `uv sync`，将环境同步到最新依赖：
-
-    ```
-    bash
+  
+    ```shell
     uv sync
     ```
-
-    这样虚拟环境中的包就会被实际升级到最新版本[3](https://github.com/astral-sh/uv/issues/1419),[4](https://github.com/astral-sh/uv/issues/6692)。
+    
+  这样虚拟环境中的包就会被实际升级到最新版本[3](https://github.com/astral-sh/uv/issues/1419),[4](https://github.com/astral-sh/uv/issues/6692)。
 
 ------
 
@@ -391,7 +387,7 @@ Run and install commands provided by Python packages
 
 - 临时运行工具（推荐使用 uvx 别名）：
 
-  ```
+  ```shell
   uv tool run black hello.py
   uvx black hello.py
   ```
@@ -400,7 +396,7 @@ Run and install commands provided by Python packages
 
 - 指定工具版本或包来源：
 
-  ```
+  ```shell
   uvx ruff@0.3.0 check
   uvx --from httpie http
   ```
