@@ -272,11 +272,11 @@ pixi add numpy --pypi
 pixi add "flask[async]==3.1.0" --pypi
 ```
 
-## 安装 pytorch(cuda)
+## [安装 pytorch](https://pixi.sh/dev/python/pytorch/)
 
-[Pytorch Installation - Pixi by prefix.dev](https://pixi.sh/dev/python/pytorch/#troubleshooting)
+### cuda
 
-### Installing from PyPi
+#### Installing from PyPi
 
 最新版本 pytorch 只提供 pypi 包，因此只推荐这种用法
 
@@ -287,11 +287,17 @@ pixi add "flask[async]==3.1.0" --pypi
 torch = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cu128" }
 torchvision = { version = ">=0.22.1", index = "https://download.pytorch.org/whl/cu128" }
 torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cu128" }
+
+[tool.pixi.target.osx.pypi-dependencies]
+# OSX has no CUDA support so use the CPU here
+torch = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cpu" }
+torchvision = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cpu" }
+torchaudio = { version = ">=2.7.1", index = "https://download.pytorch.org/whl/cpu" }
 ```
 
 然后 `pixi install` 
 
-### Installing from Conda-forge
+#### Installing from Conda-forge
 
 ` pyproject.toml`
 
@@ -306,7 +312,7 @@ cuda-version = "12.4.*"
 
 然后 `pixi install` 
 
-### Installing from PyTorch channel
+#### Installing from PyTorch channel
 
  `pyproject.toml`
 
@@ -328,9 +334,9 @@ gpu = ["gpu"]
 
 然后 `pixi install` 
 
-## 安装 pytorch(xpu)
+### xpu
 
-### Installing from PyPi
+#### Installing from PyPi
 
 https://pytorch-extension.intel.com/installation
 

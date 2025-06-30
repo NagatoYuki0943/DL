@@ -215,6 +215,110 @@ uv add numpy
 uv add pandas==2.2.0
 ```
 
+## [add pytorch](https://docs.astral.sh/uv/guides/integration/pytorch/#installing-pytorch)
+
+### edit `pyproject.toml`
+
+In this case, PyTorch would be installed from PyPI, which hosts CPU-only wheels for Windows and macOS, and GPU-accelerated wheels on Linux (targeting CUDA 12.6):
+
+```toml
+[project]
+name = "project"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.7.1",
+    "torchvision>=0.22.1",
+    "torchaudio>=2.7.1",
+]
+```
+
+In such cases, the first step is to add the relevant PyTorch index to your `pyproject.toml`:
+
+````toml
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+````
+
+We recommend the use of `explicit = true` to ensure that the index is *only* used for `torch`, `torchvision`, and other PyTorch-related packages, as opposed to generic dependencies like `jinja2`, which should continue to be sourced from the default index (PyPI).
+
+Next, update the `pyproject.toml` to point `torch` and `torchvision` to the desired index:
+
+```toml
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchaudio = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+```
+
+In some cases, you may want to use CPU-only builds in one environment (e.g., macOS), and CUDA-enabled builds in another (e.g., Linux and Windows).
+
+With `tool.uv.sources`, you can use environment markers to specify the desired index for each platform. For example, the following configuration would use PyTorch's CUDA-enabled builds on Linux, and CPU-only builds on all other platforms (e.g., macOS and Windows):
+
+```toml
+[project]
+name = "project"
+version = "0.1.0"
+requires-python = ">=3.12.0"
+dependencies = [
+  "torch>=2.7.1",
+  "torchvision>=0.22.1",
+  "torchaudio>=2.7.1",
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchaudio = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+```
+
+### [use `uv pip` interface](https://docs.astral.sh/uv/guides/integration/pytorch/#the-uv-pip-interface)
+
+While the above examples are focused on uv's project interface (`uv lock`, `uv sync`, `uv run`, etc.), PyTorch can also be installed via the `uv pip` interface.
+
+PyTorch itself offers a [dedicated interface](https://pytorch.org/get-started/locally/) to determine the appropriate pip command to run for a given target configuration. For example, you can install stable, CPU-only PyTorch on Linux with:
+
+```shell
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+```
+
+To use the same workflow with uv, replace `pip3` with `uv pip`:
+
+```shell
+uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+```
+
+# uv pip list
+
+查看安装的包
+
 # 更新包
 
 **1. 更新单个依赖包**
@@ -235,6 +339,7 @@ uv add pandas==2.2.0
     uv add requests==2.31.0
     ```
     
+  
   这样可以精确锁定依赖版本[5](https://www.datacamp.com/tutorial/python-uv)。
 
 ------
@@ -257,6 +362,7 @@ uv add pandas==2.2.0
     uv sync
     ```
     
+  
   这样虚拟环境中的包就会被实际升级到最新版本[3](https://github.com/astral-sh/uv/issues/1419),[4](https://github.com/astral-sh/uv/issues/6692)。
 
 ------
