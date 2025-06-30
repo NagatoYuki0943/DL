@@ -263,6 +263,7 @@ pixi init
 
 ```shell
 pixi add python numpy pytest
+pixi add python=3.13 # 可以这样指定 python 版本
 pixi add numpy=1.23.5
 pixi add 'numpy>=1.20,<1.24'
 

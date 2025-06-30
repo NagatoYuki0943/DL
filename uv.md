@@ -182,6 +182,132 @@ if (!(Test-Path -Path $PROFILE)) {
 Add-Content -Path $PROFILE -Value '(& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression'
 ```
 
+# [Python versions](https://docs.astral.sh/uv/getting-started/features/#python-versions)
+
+Installing and managing Python itself.
+
+- `uv python install`: Install Python versions.
+- `uv python list`: View available Python versions.
+- `uv python find`: Find an installed Python version.
+- `uv python pin`: Pin the current project to use a specific Python version.
+- `uv python uninstall`: Uninstall a Python version.
+- etc
+
+## [Install python]([Installing and managing Python | uv](https://docs.astral.sh/uv/guides/install-python/))
+
+To install the latest Python version:
+
+```shell
+uv python install
+```
+
+## [Installing a specific version](https://docs.astral.sh/uv/guides/install-python/#installing-a-specific-version)
+
+To install a specific Python version:
+
+```shell
+uv python install 3.13
+uv python install cpython-3.13.5-windows-x86_64-none
+```
+
+To install multiple Python versions:
+
+```shell
+uv python install 3.12 3.13
+```
+
+To install a version that satisfies constraints:
+
+```shell
+uv python install '>=3.8,<3.10'
+```
+
+To install an alternative Python implementation, e.g., PyPy:
+
+```shell
+uv python install pypy@3.10
+```
+
+See the [`python install`](https://docs.astral.sh/uv/concepts/python-versions/#installing-a-python-version) documentation for more details.
+
+## [Viewing available Python versions](https://docs.astral.sh/uv/concepts/python-versions/#viewing-available-python-versions)
+
+View available Python versions.
+
+```shell
+uv python list
+```
+
+## [Viewing Python installations](https://docs.astral.sh/uv/guides/install-python/#viewing-python-installations)
+
+```shell
+uv python find
+uv python find --system
+```
+
+## [Pin Python version](https://docs.astral.sh/uv/reference/cli/#uv-python-pin)
+
+Pin the current project to use a specific Python version.
+
+```shell
+uv python pin
+```
+
+eg:
+
+```shell
+uv python pin 3.13
+uv python pin cpython-3.13.5-windows-x86_64-none
+```
+
+## [Upgrading Python versions](https://docs.astral.sh/uv/guides/install-python/#upgrading-python-versions)
+
+Important
+
+Support for upgrading Python patch versions is in *preview*. This means the behavior is experimental and subject to change.
+
+To upgrade a Python version to the latest supported patch release:
+
+```shell
+uv python upgrade 3.12
+```
+
+To upgrade all uv-managed Python versions:
+
+```shell
+uv python upgrade
+```
+
+See the [`python upgrade`](https://docs.astral.sh/uv/concepts/python-versions/#upgrading-python-versions) documentation for more details.
+
+## [Reinstalling Python](https://docs.astral.sh/uv/guides/install-python/#reinstalling-python)
+
+To reinstall uv-managed Python versions, use `--reinstall`, e.g.:
+
+```shell
+uv python install --reinstall
+```
+
+This will reinstall all previously installed Python versions. Improvements are constantly being added to the Python distributions, so reinstalling may resolve bugs even if the Python version does not change.
+
+## [Uninstall Python](https://docs.astral.sh/uv/reference/cli/#uv-python-uninstall)
+
+Uninstall Python versions
+
+```shell
+uv python uninstall
+uv python uninstall 3.13
+uv python uninstall cpython-3.13.5-windows-x86_64-none
+```
+
+## [Show Python installation dir](https://docs.astral.sh/uv/reference/cli/#uv-python-dir)
+
+Show the uv Python installation directory.
+
+```shell
+uv python dir
+```
+
 # init
 
 Create a new project
