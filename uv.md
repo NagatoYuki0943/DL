@@ -65,6 +65,7 @@
 
 - **UV** 适合纯 Python 项目开发，追求极致包管理性能和一体化体验，尤其适合需要频繁重建环境、CI/CD、教学和多 Python 版本测试的场景。
 - **Pixi** 适合多语言、多平台项目，强调跨语言依赖管理、环境一致性和自动化任务，适用于数据科学、科研、跨平台团队协作等复杂开发需求。
+- **UV** 和 **Pixi** 都没有查询包是否可以更新的功能，类似 `pip list --outdate`
 
 # [Installation](https://docs.astral.sh/uv/#installation)
 
@@ -182,7 +183,7 @@ if (!(Test-Path -Path $PROFILE)) {
 Add-Content -Path $PROFILE -Value '(& uvx --generate-shell-completion powershell) | Out-String | Invoke-Expression'
 ```
 
-# [Python versions](https://docs.astral.sh/uv/getting-started/features/#python-versions)
+# [Python](https://docs.astral.sh/uv/getting-started/features/)
 
 Installing and managing Python itself.
 
@@ -318,6 +319,169 @@ uv init [PATH]
 uv init .  # 初始化当前文件夹
 ```
 
+# [Configuration files](https://docs.astral.sh/uv/concepts/configuration-files/#configuration-files)
+
+uv supports persistent configuration files at both the project- and user-level.
+
+Specifically, uv will search for a `pyproject.toml` or `uv.toml` file in the current directory, or in the nearest parent directory.
+
+> Note
+>
+> For `tool` commands, which operate at the user level, local configuration files will be ignored. Instead, uv will exclusively read from user-level configuration (e.g., `~/.config/uv/uv.toml`) and system-level configuration (e.g., `/etc/uv/uv.toml`).
+
+In workspaces, uv will begin its search at the workspace root, ignoring any configuration defined in workspace members. Since the workspace is locked as a single unit, configuration is shared across all members.
+
+If a `pyproject.toml` file is found, uv will read configuration from the `[tool.uv]` table. For example, to set a persistent index URL, add the following to a `pyproject.toml`:
+
+```toml
+# pyproject.toml
+
+[[tool.uv.index]]
+url = "https://test.pypi.org/simple"
+default = true
+```
+
+(If there is no such table, the `pyproject.toml` file will be ignored, and uv will continue searching in the directory hierarchy.)
+
+uv will also search for `uv.toml` files, which follow an identical structure, but omit the `[tool.uv]` prefix. For example:
+
+```toml
+# uv.toml
+
+[[index]]
+url = "https://test.pypi.org/simple"
+default = true
+```
+
+> Note
+>
+> `uv.toml` files take precedence over `pyproject.toml` files, so if both `uv.toml` and `pyproject.toml` files are present in a directory, configuration will be read from `uv.toml`, and `[tool.uv]` section in the accompanying `pyproject.toml` will be ignored.
+
+uv will also discover user-level configuration at `~/.config/uv/uv.toml` (or `$XDG_CONFIG_HOME/uv/uv.toml`) on macOS and Linux, or `%APPDATA%\uv\uv.toml` on Windows; and system-level configuration at `/etc/uv/uv.toml` (or `$XDG_CONFIG_DIRS/uv/uv.toml`) on macOS and Linux, or `%SYSTEMDRIVE%\ProgramData\uv\uv.toml` on Windows.
+
+User-and system-level configuration must use the `uv.toml` format, rather than the `pyproject.toml` format, as a `pyproject.toml` is intended to define a Python *project*.
+
+If project-, user-, and system-level configuration files are found, the settings will be merged, with project-level configuration taking precedence over the user-level configuration, and user-level configuration taking precedence over the system-level configuration. (If multiple system-level configuration files are found, e.g., at both `/etc/uv/uv.toml` and `$XDG_CONFIG_DIRS/uv/uv.toml`, only the first-discovered file will be used, with XDG taking priority.)
+
+For example, if a string, number, or boolean is present in both the project- and user-level configuration tables, the project-level value will be used, and the user-level value will be ignored. If an array is present in both tables, the arrays will be concatenated, with the project-level settings appearing earlier in the merged array.
+
+Settings provided via environment variables take precedence over persistent configuration, and settings provided via the command line take precedence over both.
+
+uv accepts a `--no-config` command-line argument which, when provided, disables the discovery of any persistent configuration.
+
+uv also accepts a `--config-file` command-line argument, which accepts a path to a `uv.toml` to use as the configuration file. When provided, this file will be used in place of *any* discovered configuration files (e.g., user-level configuration will be ignored).
+
+## [Settings](https://docs.astral.sh/uv/concepts/configuration-files/#settings)
+
+See the [settings reference](https://docs.astral.sh/uv/reference/settings/) for an enumeration of the available settings.
+
+## [`.env`](https://docs.astral.sh/uv/concepts/configuration-files/#env)
+
+`uv run` can load environment variables from dotenv files (e.g., `.env`, `.env.local`, `.env.development`), powered by the [`dotenvy`](https://github.com/allan2/dotenvy) crate.
+
+To load a `.env` file from a dedicated location, set the `UV_ENV_FILE` environment variable, or pass the `--env-file` flag to `uv run`.
+
+For example, to load environment variables from a `.env` file in the current working directory:
+
+```sh
+echo "MY_VAR='Hello, world!'" > .env
+uv run --env-file .env -- python -c 'import os; print(os.getenv("MY_VAR"))'
+```
+
+The `--env-file` flag can be provided multiple times, with subsequent files overriding values defined in previous files. To provide multiple files via the `UV_ENV_FILE` environment variable, separate the paths with a space (e.g., `UV_ENV_FILE="/path/to/file1 /path/to/file2"`).
+
+To disable dotenv loading (e.g., to override `UV_ENV_FILE` or the `--env-file` command-line argument), set the `UV_NO_ENV_FILE` environment variable to `1`, or pass the`--no-env-file` flag to `uv run`.
+
+If the same variable is defined in the environment and in a `.env` file, the value from the environment will take precedence.
+
+## [Configuring the pip interface](https://docs.astral.sh/uv/concepts/configuration-files/#configuring-the-pip-interface)
+
+A dedicated [`[tool.uv.pip\]`](https://docs.astral.sh/uv/reference/settings/#pip) section is provided for configuring *just* the `uv pip` command line interface. Settings in this section will not apply to `uv` commands outside the `uv pip` namespace. However, many of the settings in this section have corollaries in the top-level namespace which *do* apply to the `uv pip` interface unless they are overridden by a value in the `uv.pip` section.
+
+The `uv.pip` settings are designed to adhere closely to pip's interface and are declared separately to retain compatibility while allowing the global settings to use alternate designs (e.g., `--no-build`).
+
+As an example, setting the `index-url` under `[tool.uv.pip]`, as in the following `pyproject.toml`, would only affect the `uv pip` subcommands (e.g., `uv pip install`, but not `uv sync`, `uv lock`, or `uv run`):
+
+```toml
+# pyproject.toml
+
+[tool.uv.pip]
+index-url = "https://test.pypi.org/simple"
+```
+
+
+
+## 设置镜像源
+
+对于项目或全局的永久性配置，推荐使用配置文件。`uv` 支持在项目根目录下的 `pyproject.toml` 或 `uv.toml` 文件中进行配置。
+
+### 项目级别配置
+
+在项目的 `pyproject.toml` 文件中添加 `[tool.uv]` 或 `[tool.uv.pip]` 表。这种方式的好处是配置随项目走，方便团队协作和保持环境一致性。
+
+**a) 使用 `[tool.uv.pip]`（兼容 pip 配置）**
+
+这种方式的结构与 `pip` 的配置类似，简单直观。
+
+Ini, TOML
+
+```toml
+# pyproject.toml
+
+[tool.uv.pip]
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+extra-index-url = [
+  "https://mirrors.aliyun.com/pypi/simple/",
+  "https://pypi.mirrors.ustc.edu.cn/simple/"
+]
+```
+
+**b) 使用 `[[tool.uv.index]]`（uv 推荐方式）**
+
+这是 `uv` 提供的更灵活、功能更丰富的配置方式，允许为每个源指定名称等属性。
+
+- `default = true` 表示将该源设为默认的主索引。
+- 索引的优先级按照它们在文件中的定义顺序排列。
+
+Ini, TOML
+
+```toml
+# pyproject.toml
+
+[tool.uv]
+# 将清华源设置为默认主索引
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+name = "tsinghua"
+
+# 添加阿里源作为额外索引
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+name = "aliyun"
+```
+
+### 用户级别全局配置
+
+如果您希望为当前用户的所有项目都应用相同的配置，可以在用户主目录下的配置文件中进行设置。
+
+- **Linux/macOS**: `~/.config/uv/uv.toml`
+- **Windows**: `%APPDATA%\uv\uv.toml`
+
+在 `uv.toml` 文件中写入配置，其语法与 `pyproject.toml` 中的 `[tool.uv]` 部分类似，但不需要 `[tool.uv]` 前缀。
+
+```toml
+# 将清华源设置为默认主索引
+[[index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+# 添加阿里源
+[[index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+
+```
+
 # sync
 
 Update the project's environment
@@ -328,6 +492,8 @@ Update the project's environment
 - 功能：根据锁文件（`uv.lock`）将依赖安装到虚拟环境，确保环境与锁文件一致。默认会移除未在依赖列表中的多余包，实现“精确同步”。可用 `--inexact` 保留多余包[2](https://docs.astral.sh/uv/concepts/projects/sync/),[10](https://docs.astral.sh/uv/reference/cli/)。
 
 # add
+
+## 基础
 
 Add dependencies to the project
 
@@ -341,7 +507,121 @@ uv add numpy
 uv add pandas==2.2.0
 ```
 
-## [add pytorch](https://docs.astral.sh/uv/guides/integration/pytorch/#installing-pytorch)
+## requirements.txt
+
+If you're migrating from a `requirements.txt` file, you can use `uv add` with the `-r` flag to add all dependencies from the file:
+
+```sh
+# Add all dependencies from `requirements.txt`.
+uv add -r requirements.txt -c constraints.txt
+```
+
+## [Changing dependencies](https://docs.astral.sh/uv/concepts/projects/dependencies/#changing-dependencies)
+
+To change an existing dependency, e.g., to use a different constraint for `httpx`:
+
+```sh
+uv add "httpx>0.1.0"
+```
+
+> In this example, we are changing the constraints for the dependency in the `pyproject.toml`. The locked version of the dependency will only change if necessary to satisfy the new constraints. To force the package version to update to the latest within the constraints, use `--upgrade-package <name>`, e.g.:
+>
+> ```sh
+> uv add "httpx>0.1.0" --upgrade-package httpx
+> ```
+>
+> See the [lockfile](https://docs.astral.sh/uv/concepts/projects/sync/#upgrading-locked-package-versions) documentation for more details on upgrading packages.
+
+## [Dependency sources](https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-sources)
+
+The `tool.uv.sources` table extends the standard dependency tables with alternative dependency sources, which are used during development.
+
+Dependency sources add support for common patterns that are not supported by the `project.dependencies` standard, like editable installations and relative paths. For example, to install `foo` from a directory relative to the project root:
+
+**pyproject.toml**
+
+```
+[project]
+name = "example"
+version = "0.1.0"
+dependencies = ["foo"]
+
+[tool.uv.sources]
+foo = { path = "./packages/foo" }
+```
+
+The following dependency sources are supported by uv:
+
+- [Index](https://docs.astral.sh/uv/concepts/projects/dependencies/#index): A package resolved from a specific package index.
+- [Git](https://docs.astral.sh/uv/concepts/projects/dependencies/#git): A Git repository.
+- [URL](https://docs.astral.sh/uv/concepts/projects/dependencies/#url): A remote wheel or source distribution.
+- [Path](https://docs.astral.sh/uv/concepts/projects/dependencies/#path): A local wheel, source distribution, or project directory.
+- [Workspace](https://docs.astral.sh/uv/concepts/projects/dependencies/#workspace-member): A member of the current workspace.
+
+> **Important**
+>
+> Sources are only respected by uv. If another tool is used, only the definitions in the standard project tables will be used. If another tool is being used for development, any metadata provided in the source table will need to be re-specified in the other tool's format.
+
+### [Index](https://docs.astral.sh/uv/concepts/projects/dependencies/#index)
+
+To add Python package from a specific index, use the `--index` option:
+
+```sh
+uv add torch torchvision torchaudio --index pytorch-cu128=https://download.pytorch.org/whl/cu128
+```
+
+uv will store the index in `[[tool.uv.index]]` and add a `[tool.uv.sources]` entry:
+
+**pyproject.toml**
+
+```toml
+[project]
+dependencies = [
+  "torch",
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128"},
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+```
+
+Using an `index` source *pins* a package to the given index — it will not be downloaded from other indexes.
+
+When defining an index, an `explicit` flag can be included to indicate that the index should *only* be used for packages that explicitly specify it in `tool.uv.sources`. If `explicit` is not set, other packages may be resolved from the index, if not found elsewhere.
+
+**pyproject.toml**
+
+```toml
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+```
+
+### [Git](https://docs.astral.sh/uv/concepts/projects/dependencies/#git)
+
+### [URL](https://docs.astral.sh/uv/concepts/projects/dependencies/#url)
+
+### [Path](https://docs.astral.sh/uv/concepts/projects/dependencies/#path)
+
+### [Workspace member](https://docs.astral.sh/uv/concepts/projects/dependencies/#workspace-member)
+
+### [Platform-specific sources](https://docs.astral.sh/uv/concepts/projects/dependencies/#platform-specific-sources)
+
+### [Multiple sources](https://docs.astral.sh/uv/concepts/projects/dependencies/#multiple-sources)
+
+### [Disabling sources](https://docs.astral.sh/uv/concepts/projects/dependencies/#disabling-sources)
+
+## [Optional dependencies](https://docs.astral.sh/uv/concepts/projects/dependencies/#optional-dependencies)
+
+## [Pytorch](https://docs.astral.sh/uv/guides/integration/pytorch/)
+
+### 看上面的Index
 
 ### edit `pyproject.toml`
 
@@ -402,15 +682,15 @@ dependencies = [
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cpu", marker = "sys_platform == 'darwin'" },
     { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 torchvision = [
-    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cpu", marker = "sys_platform == 'darwin'" },
     { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 torchaudio = [
-    { index = "pytorch-cpu", marker = "sys_platform == 'macos'" },
+    { index = "pytorch-cpu", marker = "sys_platform == 'darwin'" },
     { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
@@ -444,31 +724,6 @@ uv pip install torch torchvision torchaudio --index-url https://download.pytorch
 # uv pip list
 
 查看安装的包
-
-# 更新包
-
-**1. 更新单个依赖包**
-
-- 使用 `uv add` 命令可以将某个依赖升级到最新版或指定版本。例如：
-
-  - 升级到最新版：
-
-    ```shell
-    uv add requests
-    ```
-    
-    这会将 `requests` 升级到可用的最新版本，并自动更新 `pyproject.toml` 和 `uv.lock` 文件[5](https://www.datacamp.com/tutorial/python-uv)。
-    
-  - 升级到指定版本：
-  
-    ```shell
-    uv add requests==2.31.0
-    ```
-    
-  
-  这样可以精确锁定依赖版本[5](https://www.datacamp.com/tutorial/python-uv)。
-
-------
 
 **2. 更新所有依赖包**
 
@@ -508,6 +763,10 @@ Remove dependencies from the project
 - 用法：`uv remove [包名]`
 - 功能：从 `pyproject.toml` 移除指定依赖，同时更新锁文件和虚拟环境。会卸载该依赖及其子依赖（如果没有被其他包依赖）[3](https://docs.astral.sh/uv/concepts/projects/dependencies/),[10](https://docs.astral.sh/uv/reference/cli/),[12](https://www.datacamp.com/tutorial/python-uv)。
 
+```sh
+uv remove numpy
+```
+
 # version
 
 Read or update the project's version
@@ -525,6 +784,42 @@ Update the project's lockfile
 
 - 用法：`uv lock`
 - 功能：解析当前依赖，生成或更新锁文件（`uv.lock`）。可用 `--check` 检查锁文件是否最新。锁定操作保证依赖版本一致性，但不会自动升级到依赖的最新版本，需手动更新[2](https://docs.astral.sh/uv/concepts/projects/sync/),[6](https://docs.astral.sh/uv/pip/compile/),[10](https://docs.astral.sh/uv/reference/cli/)。
+
+## [Checking if the lockfile is up-to-date](https://docs.astral.sh/uv/concepts/projects/sync/#checking-if-the-lockfile-is-up-to-date)
+
+When considering if the lockfile is up-to-date, uv will check if it matches the project metadata. For example, if you add a dependency to your `pyproject.toml`, the lockfile will be considered outdated. Similarly, if you change the version constraints for a dependency such that the locked version is excluded, the lockfile will be considered outdated. However, if you change the version constraints such that the existing locked version is still included, the lockfile will still be considered up-to-date.
+
+You can check if the lockfile is up-to-date by passing the `--check` flag to `uv lock`:
+
+```
+uv lock --check
+```
+
+This is equivalent to the `--locked` flag for other commands.
+
+## [Upgrading locked package versions](https://docs.astral.sh/uv/concepts/projects/sync/#upgrading-locked-package-versions)
+
+With an existing `uv.lock` file, uv will prefer the previously locked versions of packages when running `uv sync` and `uv lock`. Package versions will only change if the project's dependency constraints exclude the previous, locked version.
+
+To upgrade all packages:
+
+```sh
+uv lock --upgrade
+```
+
+To upgrade a single package to the latest version, while retaining the locked versions of all other packages:
+
+```sh
+uv lock --upgrade-package <package>
+```
+
+To upgrade a single package to a specific version:
+
+```sh
+uv lock --upgrade-package <package>==<version>
+```
+
+In all cases, upgrades are limited to the project's dependency constraints. For example, if the project defines an upper bound for a package then an upgrade will not go beyond that version.
 
 # export
 
@@ -544,145 +839,1011 @@ Display the project's dependency tree
 - 用法：`uv tree [选项]`
 - 功能：以树状结构展示当前项目或工作区的依赖关系，包括依赖分组、子项目依赖等。可用 `--no-dev` 排除开发依赖，用 `--project` 查看指定项目的依赖树[8](https://github.com/astral-sh/uv/issues/8719),[10](https://docs.astral.sh/uv/reference/cli/)。
 
-# run
+# [Running scripts](https://docs.astral.sh/uv/guides/scripts/#running-scripts)
 
-**功能与用途：**
+A Python script is a file intended for standalone execution, e.g., with `python <script>.py`. Using uv to execute scripts ensures that script dependencies are managed without manually managing environments.
 
-- `uv run` 用于在项目的虚拟环境中执行命令或脚本，无需手动激活环境或担心依赖未同步。
-- 每次运行时，uv 会自动确保环境已同步和最新，然后在隔离环境中执行命令[1,](https://docs.astral.sh/uv/concepts/projects/run/)[6,](https://www.saaspegasus.com/guides/uv-deep-dive/)[7](https://www.datacamp.com/tutorial/python-uv)。
+> Note
+>
+> If you are not familiar with Python environments: every Python installation has an environment that packages can be installed in. Typically, creating [*virtual* environments](https://docs.python.org/3/library/venv.html) is recommended to isolate packages required by each script. uv automatically manages virtual environments for you and prefers a [declarative](https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies) approach to dependencies.
 
-**典型用法：**
+## [Running a script without dependencies](https://docs.astral.sh/uv/guides/scripts/#running-a-script-without-dependencies)
 
-- 运行 Python 脚本：
+If your script has no dependencies, you can execute it with `uv run`:
 
-  ```shell
-  uv run hello.py
-  ```
+**example.py**
 
-  这相当于在虚拟环境中执行 `python hello.py`，且无需手动激活环境[2](https://docs.astral.sh/uv/guides/scripts/),[4](https://docs.astral.sh/uv/reference/cli/),[7](https://www.datacamp.com/tutorial/python-uv)。
+```python
+print("Hello world")
+```
 
-- 运行带参数的脚本或命令：
+run
 
-  ```shell
-  uv run manage.py runserver
-  ```
+```sh
+uv run example.py
+# Hello world
+```
 
-  适合 Django、Flask 等项目的开发命令[6](https://www.saaspegasus.com/guides/uv-deep-dive/)。
+Similarly, if your script depends on a module in the standard library, there's nothing more to do:
 
-- 运行 shell 命令或自定义 CLI：
+**example.py**
 
-  ```shell
-  uv run example-cli foo
-  uv run bash scripts/foo.sh
-  ```
+```python
+import os
 
-  支持运行项目环境下可用的任意命令[1](https://docs.astral.sh/uv/concepts/projects/run/)。
+print(os.path.expanduser("~"))
+```
 
-- 临时添加依赖运行命令：
+run
 
-  ```shell
-  uv run --with httpx==0.26.0 python -c "import httpx; print(httpx.__version__)"
-  ```
+```sh
+uv run example.py
+# /Users/astral
+```
 
-  可以为本次运行临时指定依赖及其版本，无需修改项目依赖文件[1](https://docs.astral.sh/uv/concepts/projects/run/)。
+Arguments may be provided to the script:
 
-- 跳过项目环境（如仅运行脚本）：
+**example.py**
 
-  ```shell
-  uv run --no-project example.py
-  ```
+```python
+import sys
 
-  跳过项目依赖，仅用当前环境运行脚本[2](https://docs.astral.sh/uv/guides/scripts/),[4](https://docs.astral.sh/uv/reference/cli/)。
+print(" ".join(sys.argv[1:]))
+```
 
-- 运行 `ruff`
+run
 
-  ```shell
-  uv run ruff format
-  ```
+```python
+uv run example.py test
+# test
 
-**其他特性：**
+uv run example.py hello world!
+# hello world!
+```
 
-- 支持通过 stdin 或 URL 运行 Python 脚本。
-- 自动处理信号转发，保证命令行工具的交互体验[1](https://docs.astral.sh/uv/concepts/projects/run/),[4](https://docs.astral.sh/uv/reference/cli/)。
-- 可作为传统 `python` 命令的替代，适用于所有需要依赖环境的场景[6](https://www.saaspegasus.com/guides/uv-deep-dive/),[7](https://www.datacamp.com/tutorial/python-uv)。
+Additionally, your script can be read directly from stdin:
 
-# tool
+```sh
+echo 'print("hello world!")' | uv run -
+```
 
-Run and install commands provided by Python packages
+Or, if your shell supports [here-documents](https://en.wikipedia.org/wiki/Here_document):
 
-**功能与用途：**
+```sh
+uv run - <<EOF
+print("hello world!")
+EOF
+```
 
-- `uv tool` 用于运行或安装以 Python 包形式发布的命令行工具（如 black、ruff、pytest 等），无需将其安装到项目环境，避免依赖污染[3,](https://docs.astral.sh/uv/guides/tools/)[5](https://docs.astral.sh/uv/concepts/tools/),[7](https://www.datacamp.com/tutorial/python-uv)。
-- `uv tool run <工具>` 或更简洁的 `uvx <工具>`，可临时调用工具，自动在隔离的缓存环境中安装并运行[3](https://docs.astral.sh/uv/guides/tools/),[5](https://docs.astral.sh/uv/concepts/tools/)。
+Note that if you use `uv run` in a *project*, i.e., a directory with a `pyproject.toml`, it will install the current project before running the script. If your script does not depend on the project, use the `--no-project` flag to skip this:
 
-**典型用法：**
+```sh
+# Note: the `--no-project` flag must be provided _before_ the script name.
+uv run --no-project example.py
+```
 
-- 临时运行工具（推荐使用 uvx 别名）：
+See the [projects guide](https://docs.astral.sh/uv/guides/projects/) for more details on working in projects.
 
-  ```shell
-  uv tool run black hello.py
-  uvx black hello.py
-  ```
+## [Running a script with dependencies](https://docs.astral.sh/uv/guides/scripts/#running-a-script-with-dependencies)
 
-  工具及依赖会被安装到 uv 的缓存虚拟环境，环境自动复用和清理[3](https://docs.astral.sh/uv/guides/tools/),[5](https://docs.astral.sh/uv/concepts/tools/),[7](https://www.datacamp.com/tutorial/python-uv)。
+When your script requires other packages, they must be installed into the environment that the script runs in. uv prefers to create these environments on-demand instead of using a long-lived virtual environment with manually managed dependencies. This requires explicit declaration of dependencies that are required for the script. Generally, it's recommended to use a [project](https://docs.astral.sh/uv/guides/projects/) or [inline metadata](https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies) to declare dependencies, but uv supports requesting dependencies per invocation as well.
 
-- 指定工具版本或包来源：
+For example, the following script requires `rich`.
 
-  ```shell
-  uvx ruff@0.3.0 check
-  uvx --from httpie http
-  ```
+**example.py**
 
-  支持指定工具版本，或当命令名与包名不一致时用 `--from` 指定[3](https://docs.astral.sh/uv/guides/tools/),[5](https://docs.astral.sh/uv/concepts/tools/)。
+```python
+import time
+from rich.progress import track
 
-- 安装工具到全局环境（持久化）：
+for i in track(range(20), description="For example:"):
+    time.sleep(0.05)
+```
 
-  ```shell
-  uv tool install ruff
-  ```
+If executed without specifying a dependency, this script will fail:
 
-  安装后工具可直接在 shell 中调用，适合频繁使用[3](https://docs.astral.sh/uv/guides/tools/),[5](https://docs.astral.sh/uv/concepts/tools/)。
+```sh
+uv run --no-project example.py
+# Trackback (most recent call last):
+# ...
+```
 
-- 运行 `ruff`
+Request the dependency using the `--with` option:
 
-  ```shell
-   uv tool run ruff format
-  ```
+```sh
+uv run --with rich example.py
+# For example ...
+```
 
-**其他特性：**
+Constraints can be added to the requested dependency if specific versions are needed:
 
-- 工具环境与项目环境完全隔离，避免依赖冲突[5](https://docs.astral.sh/uv/concepts/tools/)。
-- 工具缓存于 uv 的 cache 目录，清理 cache 会自动移除[5](https://docs.astral.sh/uv/concepts/tools/),[7](https://www.datacamp.com/tutorial/python-uv)。
-- `uv tool run`/`uvx` 适合偶尔用到的开发工具，`uv tool install` 适合需要长期可用的工具[3](https://docs.astral.sh/uv/guides/tools/),[5](https://docs.astral.sh/uv/concepts/tools/)。
-- 如果工具需要访问项目本身（如 pytest/mypy），建议用 `uv run` 而非 `uv tool run`，以便在项目环境下执行[5](https://docs.astral.sh/uv/concepts/tools/)。
+```sh
+uv run --with 'rich>12,<13' example.py
+```
 
-# python
+Multiple dependencies can be requested by repeating with `--with` option.
 
-Manage Python versions and installations
+Note that if `uv run` is used in a *project*, these dependencies will be included *in addition* to the project's dependencies. To opt-out of this behavior, use the `--no-project` flag.
 
-- 用法：`uv python <子命令>`
-- 作用：管理 Python 解释器版本，包括安装、切换、列举等。可用于指定项目所需的 Python 版本。
-- 典型操作（部分命令可能随 uv 版本变化）：
-  - `uv python install 3.11.3` 安装指定版本
-  - `uv python list` 显示可用/已安装版本
+## [Creating a Python script](https://docs.astral.sh/uv/guides/scripts/#creating-a-python-script)
 
-# pip
+Python recently added a standard format for [inline script metadata](https://packaging.python.org/en/latest/specifications/inline-script-metadata/#inline-script-metadata). It allows for selecting Python versions and defining dependencies. Use `uv init --script` to initialize scripts with the inline metadata:
 
-Manage Python packages with a pip-compatible interface
+```sh
+uv init --script example.py --python 3.12
+```
 
-- 用法：`uv pip install <包名>`、`uv pip list`
-- 作用：在 uv 管理的虚拟环境中直接调用 pip，适用于需要兼容某些只支持 pip 的工具（如 Jupyter 的 `%pip` 魔法命令）。
-- 注意：uv 默认不在虚拟环境中安装 pip，需用 `uv venv --seed` 创建带 pip 的环境，或用 `uv pip install pip` 手动安装 pip[2](https://pydevtools.com/handbook/how-to/how-to-use-pip-in-a-uv-virtual-environment/)。
+## [Declaring script dependencies](https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies)
+
+The inline metadata format allows the dependencies for a script to be declared in the script itself.
+
+uv supports adding and updating inline script metadata for you. Use `uv add --script` to declare the dependencies for the script:
+
+```sh
+uv add --script example.py 'requests<3' 'rich'
+```
+
+This will add a `script` section at the top of the script declaring the dependencies using TOML:
+
+**example.py**
+
+```python
+# /// script
+# dependencies = [
+#   "requests<3",
+#   "rich",
+# ]
+# ///
+
+import requests
+from rich.pretty import pprint
+
+resp = requests.get("https://peps.python.org/api/peps.json")
+data = resp.json()
+pprint([(k, v["title"]) for k, v in data.items()][:10])
+```
+
+uv will automatically create an environment with the dependencies necessary to run the script, e.g.:
+
+```sh
+uv run example.py
+# ...
+```
+
+> Important
+>
+> When using inline script metadata, even if `uv run` is [used in a *project*](https://docs.astral.sh/uv/concepts/projects/run/), the project's dependencies will be ignored. The `--no-project` flag is not required.
+
+uv also respects Python version requirements:
+
+```python
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+
+# Use some syntax added in Python 3.12
+type Point = tuple[float, float]
+print(Point)
+```
+
+> Note
+>
+> The `dependencies` field must be provided even if empty.
+
+`uv run` will search for and use the required Python version. The Python version will download if it is not installed — see the documentation on [Python versions](https://docs.astral.sh/uv/concepts/python-versions/) for more details.
+
+## [Using a shebang to create an executable file](https://docs.astral.sh/uv/guides/scripts/#using-a-shebang-to-create-an-executable-file)
+
+A shebang can be added to make a script executable without using `uv run` — this makes it easy to run scripts that are on your `PATH` or in the current folder.
+
+For example, create a file called `greet` with the following contents
+
+**greet**
+
+```sh
+#!/usr/bin/env -S uv run --script
+
+print("Hello, world!")
+```
+
+Ensure that your script is executable, e.g., with `chmod +x greet`, then run the script:
+
+```sh
+./greet
+# Hello, world!
+```
+
+Declaration of dependencies is also supported in this context, for example:
+
+**example**
+
+```python
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx"]
+# ///
+
+import httpx
+
+print(httpx.get("https://example.com"))
+```
+
+## [Using alternative package indexes](https://docs.astral.sh/uv/guides/scripts/#using-alternative-package-indexes)
+
+If you wish to use an alternative [package index](https://docs.astral.sh/uv/concepts/indexes/) to resolve dependencies, you can provide the index with the `--index` option:
+
+```sh
+uv add --index "https://example.com/simple" --script example.py 'requests<3' 'rich'
+```
+
+This will include the package data in the inline metadata:
+
+```toml
+# [[tool.uv.index]]
+# url = "https://example.com/simple"
+```
+
+If you require authentication to access the package index, then please refer to the [package index](https://docs.astral.sh/uv/concepts/indexes/) documentation.
+
+## [Locking dependencies](https://docs.astral.sh/uv/guides/scripts/#locking-dependencies)
+
+uv supports locking dependencies for PEP 723 scripts using the `uv.lock` file format. Unlike with projects, scripts must be explicitly locked using `uv lock`:
+
+```sh
+uv lock --script example.py
+```
+
+Running `uv lock --script` will create a `.lock` file adjacent to the script (e.g., `example.py.lock`).
+
+Once locked, subsequent operations like `uv run --script`, `uv add --script`, `uv export --script`, and `uv tree --script` will reuse the locked dependencies, updating the lockfile if necessary.
+
+If no such lockfile is present, commands like `uv export --script` will still function as expected, but will not create a lockfile.
+
+## [Improving reproducibility](https://docs.astral.sh/uv/guides/scripts/#improving-reproducibility)
+
+In addition to locking dependencies, uv supports an `exclude-newer` field in the `tool.uv` section of inline script metadata to limit uv to only considering distributions released before a specific date. This is useful for improving the reproducibility of your script when run at a later point in time.
+
+The date must be specified as an [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339.html) timestamp (e.g., `2006-12-02T02:07:43Z`).
+
+**example.py**
+
+```python
+# /// script
+# dependencies = [
+#   "requests",
+# ]
+# [tool.uv]
+# exclude-newer = "2023-10-16T00:00:00Z"
+# ///
+
+import requests
+
+print(requests.__version__)
+```
+
+## [Using different Python versions](https://docs.astral.sh/uv/guides/scripts/#using-different-python-versions)
+
+uv allows arbitrary Python versions to be requested on each script invocation, for example:
+
+**example.py**
+
+```python
+import sys
+
+print(".".join(map(str, sys.version_info[:3])))
+```
+
+```python
+# Use the default Python version, may differ on your machine
+uv run example.py
+# 3.12.6
+```
+
+```python
+# Use a specific Python version
+uv run --python 3.10 example.py
+# 3.10.15
+```
+
+See the [Python version request](https://docs.astral.sh/uv/concepts/python-versions/#requesting-a-version) documentation for more details on requesting Python versions.
+
+## [Using GUI scripts](https://docs.astral.sh/uv/guides/scripts/#using-gui-scripts)
+
+On Windows `uv` will run your script ending with `.pyw` extension using `pythonw`:
+
+**example.pyw**
+
+```python
+from tkinter import Tk, ttk
+
+root = Tk()
+root.title("uv")
+frm = ttk.Frame(root, padding=10)
+frm.grid()
+ttk.Label(frm, text="Hello World").grid(column=0, row=0)
+root.mainloop()
+```
+
+```sh
+uv run example.pyw
+# 会出现窗口
+```
+
+Similarly, it works with dependencies as well:
+
+**example_pyqt.pyw**
+
+```python
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QGridLayout
+
+app = QApplication(sys.argv)
+widget = QWidget()
+grid = QGridLayout()
+
+text_label = QLabel()
+text_label.setText("Hello World!")
+grid.addWidget(text_label)
+
+widget.setLayout(grid)
+widget.setGeometry(100, 100, 200, 50)
+widget.setWindowTitle("uv")
+widget.show()
+sys.exit(app.exec_())
+```
+
+```sh
+uv run --with PyQt5 example_pyqt.pyw
+# 会出现窗口
+```
+
+# [Using tools](https://docs.astral.sh/uv/guides/tools/#using-tools)
+
+Many Python packages provide applications that can be used as tools. uv has specialized support for easily invoking and installing tools.
+
+Running and installing tools published to Python package indexes, e.g., `ruff` or `black`.
+
+- `uvx` / `uv tool run`: Run a tool in a temporary environment.
+- `uv tool install`: Install a tool user-wide.
+- `uv tool uninstall`: Uninstall a tool.
+- `uv tool list`: List installed tools.
+- `uv tool update-shell`: Update the shell to include tool executables.
+
+## [Running tools](https://docs.astral.sh/uv/guides/tools/#running-tools)
+
+The `uvx` command invokes a tool without installing it.
+
+For example, to run `ruff`:
+
+```sh
+uvx ruff
+```
+
+> Note
+>
+> This is exactly equivalent to:
+>
+> ```sh
+> uv tool run ruff
+> ```
+>
+> `uvx` is provided as an alias for convenience.
+
+Arguments can be provided after the tool name:
+
+```sh
+uvx pycowsay hello from uv
+```
+
+Tools are installed into temporary, isolated environments when using `uvx`.
+
+> Note
+>
+> If you are running a tool in a [*project*](https://docs.astral.sh/uv/concepts/projects/) and the tool requires that your project is installed, e.g., when using `pytest` or `mypy`, you'll want to use [`uv run`](https://docs.astral.sh/uv/guides/projects/#running-commands) instead of `uvx`. Otherwise, the tool will be run in a virtual environment that is isolated from your project.
+>
+> If your project has a flat structure, e.g., instead of using a `src` directory for modules, the project itself does not need to be installed and `uvx` is fine. In this case, using `uv run` is only beneficial if you want to pin the version of the tool in the project's dependencies.
+
+## [Commands with different package names](https://docs.astral.sh/uv/guides/tools/#commands-with-different-package-names)
+
+When `uvx ruff` is invoked, uv installs the `ruff` package which provides the `ruff` command. However, sometimes the package and command names differ.
+
+The `--from` option can be used to invoke a command from a specific package, e.g., `http` which is provided by `httpie`:
+
+```sh
+uvx --from httpie http
+```
+
+## [Requesting specific versions](https://docs.astral.sh/uv/guides/tools/#requesting-specific-versions)
+
+To run a tool at a specific version, use `command@<version>`:
+
+```sh
+uvx ruff@0.3.0 check
+```
+
+To run a tool at the latest version, use `command@latest`:
+
+```sh
+uvx ruff@latest check
+```
+
+The `--from` option can also be used to specify package versions, as above:
+
+```sh
+uvx --from 'ruff==0.3.0' ruff check
+```
+
+Or, to constrain to a range of versions:
+
+```sh
+uvx --from 'ruff>0.2.0,<0.3.0' ruff check
+```
+
+Note the `@` syntax cannot be used for anything other than an exact version.
+
+## [Requesting extras](https://docs.astral.sh/uv/guides/tools/#requesting-extras)
+
+The `--from` option can be used to run a tool with extras:
+
+```sh
+uvx --from 'mypy[faster-cache,reports]' mypy --xml-report mypy_report
+```
+
+This can also be combined with version selection:
+
+```sh
+uvx --from 'mypy[faster-cache,reports]==1.13.0' mypy --xml-report mypy_report
+```
+
+## [Requesting different sources](https://docs.astral.sh/uv/guides/tools/#requesting-different-sources)
+
+The `--from` option can also be used to install from alternative sources.
+
+For example, to pull from git:
+
+```sh
+uvx --from git+https://github.com/httpie/cli httpie
+```
+
+You can also pull the latest commit from a specific named branch:
+
+```sh
+uvx --from git+https://github.com/httpie/cli@master httpie
+```
+
+Or pull a specific tag:
+
+```sh
+uvx --from git+https://github.com/httpie/cli@3.2.4 httpie
+```
+
+Or even a specific commit:
+
+```sh
+uvx --from git+https://github.com/httpie/cli@2843b87 httpie
+```
+
+## [Commands with plugins](https://docs.astral.sh/uv/guides/tools/#commands-with-plugins)
+
+Additional dependencies can be included, e.g., to include `mkdocs-material` when running `mkdocs`:
+
+```sh
+uvx --with mkdocs-material mkdocs --help
+```
+
+## [Installing tools](https://docs.astral.sh/uv/guides/tools/#installing-tools)
+
+If a tool is used often, it is useful to install it to a persistent environment and add it to the `PATH` instead of invoking `uvx` repeatedly.
+
+> Tip
+>
+> `uvx` is a convenient alias for `uv tool run`. All of the other commands for interacting with tools require the full `uv tool` prefix.
+
+To install `ruff`:
+
+```sh
+uv tool install ruff
+```
+
+When a tool is installed, its executables are placed in a `bin` directory in the `PATH` which allows the tool to be run without uv. If it's not on the `PATH`, a warning will be displayed and `uv tool update-shell` can be used to add it to the `PATH`.
+
+After installing `ruff`, it should be available:
+
+```sh
+ruff --version
+```
+
+Unlike `uv pip install`, installing a tool does not make its modules available in the current environment. For example, the following command will fail:
+
+```sh
+python -c "import ruff"
+```
+
+This isolation is important for reducing interactions and conflicts between dependencies of tools, scripts, and projects.
+
+Unlike `uvx`, `uv tool install` operates on a *package* and will install all executables provided by the tool.
+
+For example, the following will install the `http`, `https`, and `httpie` executables:
+
+```sh
+uv tool install httpie
+```
+
+Additionally, package versions can be included without `--from`:
+
+```sh
+uv tool install 'httpie>0.1.0'
+```
+
+And, similarly, for package sources:
+
+```sh
+uv tool install git+https://github.com/httpie/cli
+```
+
+As with `uvx`, installations can include additional packages:
+
+```sh
+uv tool install mkdocs --with mkdocs-material
+```
+
+## [Upgrading tools](https://docs.astral.sh/uv/guides/tools/#upgrading-tools)
+
+To upgrade a tool, use `uv tool upgrade`:
+
+```sh
+uv tool upgrade ruff
+```
+
+Tool upgrades will respect the version constraints provided when installing the tool. For example, `uv tool install ruff >=0.3,<0.4` followed by `uv tool upgrade ruff` will upgrade Ruff to the latest version in the range `>=0.3,<0.4`.
+
+To instead replace the version constraints, re-install the tool with `uv tool install`:
+
+```sh
+uv tool install ruff>=0.4
+```
+
+To instead upgrade all tools:
+
+```sh
+uv tool upgrade --all
+```
+
+## [Requesting Python versions](https://docs.astral.sh/uv/guides/tools/#requesting-python-versions)
+
+By default, uv will use your default Python interpreter (the first it finds) when running, installing, or upgrading tools. You can specify the Python interpreter to use with the `--python` option.
+
+For example, to request a specific Python version when running a tool:
+
+```
+uvx --python 3.10 ruff
+```
+
+Or, when installing a tool:
+
+```
+uv tool install --python 3.10 ruff
+```
+
+Or, when upgrading a tool:
+
+```
+uv tool upgrade --python 3.10 ruff
+```
+
+For more details on requesting Python versions, see the [Python version](https://docs.astral.sh/uv/concepts/python-versions/#requesting-a-version) concept page.
+
+## [Legacy Windows Scripts](https://docs.astral.sh/uv/guides/tools/#legacy-windows-scripts)
+
+Tools also support running [legacy setuptools scripts](https://packaging.python.org/en/latest/guides/distributing-packages-using-setuptools/#scripts). These scripts are available via `$(uv tool dir)\<tool-name>\Scripts` when installed.
+
+Currently only legacy scripts with the `.ps1`, `.cmd`, and `.bat` extensions are supported.
+
+For example, below is an example running a Command Prompt script.
+
+```
+uv tool run --from nuitka==2.6.7 nuitka.cmd --version
+```
+
+In addition, you don't need to specify the extension. `uvx` will automatically look for files ending in `.ps1`, `.cmd`, and `.bat` in that order of execution on your behalf.
+
+```
+uv tool run --from nuitka==2.6.7 nuitka --version
+```
+
+# [Tools](https://docs.astral.sh/uv/concepts/tools/#tools)
+
+Tools are Python packages that provide command-line interfaces.
+
+> Note
+>
+> See the [tools guide](https://docs.astral.sh/uv/guides/tools/) for an introduction to working with the tools interface — this document discusses details of tool management.
+
+## [The `uv tool` interface](https://docs.astral.sh/uv/concepts/tools/#the-uv-tool-interface)
+
+uv includes a dedicated interface for interacting with tools. Tools can be invoked without installation using `uv tool run`, in which case their dependencies are installed in a temporary virtual environment isolated from the current project.
+
+Because it is very common to run tools without installing them, a `uvx` alias is provided for `uv tool run` — the two commands are exactly equivalent. For brevity, the documentation will mostly refer to `uvx` instead of `uv tool run`.
+
+Tools can also be installed with `uv tool install`, in which case their executables are [available on the `PATH`](https://docs.astral.sh/uv/concepts/tools/#the-path) — an isolated virtual environment is still used, but it is not removed when the command completes.
+
+## [Execution vs installation](https://docs.astral.sh/uv/concepts/tools/#execution-vs-installation)
+
+In most cases, executing a tool with `uvx` is more appropriate than installing the tool. Installing the tool is useful if you need the tool to be available to other programs on your system, e.g., if some script you do not control requires the tool, or if you are in a Docker image and want to make the tool available to users.
+
+## [Tool environments](https://docs.astral.sh/uv/concepts/tools/#tool-environments)
+
+When running a tool with `uvx`, a virtual environment is stored in the uv cache directory and is treated as disposable, i.e., if you run `uv cache clean` the environment will be deleted. The environment is only cached to reduce the overhead of repeated invocations. If the environment is removed, a new one will be created automatically.
+
+When installing a tool with `uv tool install`, a virtual environment is created in the uv tools directory. The environment will not be removed unless the tool is uninstalled. If the environment is manually deleted, the tool will fail to run.
+
+## [Tool versions](https://docs.astral.sh/uv/concepts/tools/#tool-versions)
+
+Unless a specific version is requested, `uv tool install` will install the latest available of the requested tool. `uvx` will use the latest available version of the requested tool *on the first invocation*. After that, `uvx` will use the cached version of the tool unless a different version is requested, the cache is pruned, or the cache is refreshed.
+
+For example, to run a specific version of Ruff:
+
+```sh
+uvx ruff@0.6.0 --version
+# ruff 0.6.0
+```
+
+A subsequent invocation of `uvx` will use the latest, not the cached, version.
+
+```sh
+uvx ruff --version
+# ruff 0.6.2
+```
+
+But, if a new version of Ruff was released, it would not be used unless the cache was refreshed.
+
+To request the latest version of Ruff and refresh the cache, use the `@latest` suffix:
+
+```sh
+uvx ruff@latest --version
+# ruff 0.6.2
+```
+
+Once a tool is installed with `uv tool install`, `uvx` will use the installed version by default.
+
+For example, after installing an older version of Ruff:
+
+```sh
+uv tool install ruff==0.5.0
+```
+
+The version of `ruff` and `uvx ruff` is the same:
+
+```sh
+ruff --version
+# ruff 0.5.0
+uvx ruff --version
+# ruff 0.5.0
+```
+
+However, you can ignore the installed version by requesting the latest version explicitly, e.g.:
+
+```sh
+uvx ruff@latest --version
+# 0.6.2
+```
+
+Or, by using the `--isolated` flag, which will avoid refreshing the cache but ignore the installed version:
+
+```sh
+uvx --isolated ruff --version
+# 0.6.2
+```
+
+`uv tool install` will also respect the `{package}@{version}` and `{package}@latest` specifiers, as in:
+
+```sh
+uv tool install ruff@latest
+uv tool install ruff@0.6.0
+```
+
+## [Tools directory](https://docs.astral.sh/uv/concepts/tools/#tools-directory)
+
+By default, the uv tools directory is named `tools` and is in the uv application state directory, e.g., `~/.local/share/uv/tools`. The location may be customized with the `UV_TOOL_DIR` environment variable.
+
+To display the path to the tool installation directory:
+
+```sh
+uv tool dir
+```
+
+Tool environments are placed in a directory with the same name as the tool package, e.g., `.../tools/<name>`.
+
+> Important
+>
+> Tool environments are *not* intended to be mutated directly. It is strongly recommended never to mutate a tool environment manually, e.g., with a `pip` operation.
+
+## [Upgrading tools](https://docs.astral.sh/uv/concepts/tools/#upgrading-tools)
+
+Tool environments may be upgraded via `uv tool upgrade`, or re-created entirely via subsequent `uv tool install` operations.
+
+To upgrade all packages in a tool environment
+
+```sh
+uv tool upgrade black
+```
+
+To upgrade a single package in a tool environment:
+
+```sh
+uv tool upgrade black --upgrade-package click
+```
+
+Tool upgrades will respect the version constraints provided when installing the tool. For example, `uv tool install black >=23,<24` followed by `uv tool upgrade black` will upgrade Black to the latest version in the range `>=23,<24`.
+
+To instead replace the version constraints, reinstall the tool with `uv tool install`:
+
+```sh
+uv tool install black>=24
+```
+
+Similarly, tool upgrades will retain the settings provided when installing the tool. For example, `uv tool install black --prerelease allow` followed by `uv tool upgrade black` will retain the `--prerelease allow` setting.
+
+> Note
+>
+> Tool upgrades will reinstall the tool executables, even if they have not changed.
+
+To reinstall packages during upgrade, use the `--reinstall` and `--reinstall-package` options.
+
+To reinstall all packages in a tool environment
+
+```sh
+uv tool upgrade black --reinstall
+```
+
+To reinstall a single package in a tool environment:
+
+```sh
+uv tool upgrade black --reinstall-package click
+```
+
+## [Including additional dependencies](https://docs.astral.sh/uv/concepts/tools/#including-additional-dependencies)
+
+Additional packages can be included during tool execution:
+
+```
+uvx --with <extra-package> <tool>
+```
+
+And, during tool installation:
+
+```
+uv tool install --with <extra-package> <tool-package>
+```
+
+The `--with` option can be provided multiple times to include additional packages.
+
+The `--with` option supports package specifications, so a specific version can be requested:
+
+```
+uvx --with <extra-package>==<version> <tool-package>
+```
+
+If the requested version conflicts with the requirements of the tool package, package resolution will fail and the command will error.
+
+# [The pip interface](https://docs.astral.sh/uv/pip/#the-pip-interface)
+
+## [Managing packages](https://docs.astral.sh/uv/pip/packages/#managing-packages)
+
+### [Installing a package](https://docs.astral.sh/uv/pip/packages/#installing-a-package)
+
+To install a package into the virtual environment, e.g., Flask:
+
+```sh
+uv pip install flask
+```
+
+To install a package with optional dependencies enabled, e.g., Flask with the "dotenv" extra:
+
+```sh
+uv pip install "flask[dotenv]"
+```
+
+To install multiple packages, e.g., Flask and Ruff:
+
+```sh
+uv pip install flask ruff
+```
+
+To install a package with a constraint, e.g., Ruff v0.2.0 or newer:
+
+```sh
+uv pip install 'ruff>=0.2.0'
+```
+
+To install a package at a specific version, e.g., Ruff v0.3.0:
+
+```sh
+uv pip install 'ruff==0.3.0'
+```
+
+To install a package from the disk:
+
+```sh
+uv pip install "ruff @ ./projects/ruff"
+```
+
+To install a package from GitHub:
+
+```sh
+uv pip install "git+https://github.com/astral-sh/ruff"
+```
+
+To install a package from GitHub at a specific reference:
+
+```sh
+# Install a tag
+uv pip install "git+https://github.com/astral-sh/ruff@v0.2.0"
+
+# Install a commit
+uv pip install "git+https://github.com/astral-sh/ruff@1fadefa67b26508cc59cf38e6130bde2243c929d"
+
+# Install a branch
+uv pip install "git+https://github.com/astral-sh/ruff@main"
+```
+
+See the [Git authentication](https://docs.astral.sh/uv/concepts/authentication/#git-authentication) documentation for installation from a private repository.
+
+### [Editable packages](https://docs.astral.sh/uv/pip/packages/#editable-packages)
+
+Editable packages do not need to be reinstalled for changes to their source code to be active.
+
+To install the current project as an editable package
+
+```sh
+uv pip install -e .
+```
+
+To install a project in another directory as an editable package:
+
+```sh
+uv pip install -e "ruff @ ./project/ruff"
+```
+
+### [Installing packages from files](https://docs.astral.sh/uv/pip/packages/#installing-packages-from-files)
+
+Multiple packages can be installed at once from standard file formats.
+
+Install from a `requirements.txt` file:
+
+```sh
+uv pip install -r requirements.txt
+```
+
+See the [`uv pip compile`](https://docs.astral.sh/uv/pip/compile/) documentation for more information on `requirements.txt` files.
+
+Install from a `pyproject.toml` file:
+
+```sh
+uv pip install -r pyproject.toml
+```
+
+Install from a `pyproject.toml` file with optional dependencies enabled, e.g., the "foo" extra:
+
+```sh
+uv pip install -r pyproject.toml --extra foo
+```
+
+Install from a `pyproject.toml` file with all optional dependencies enabled:
+
+```sh
+uv pip install -r pyproject.toml --all-extras
+```
+
+To install dependency groups in the current project directory's `pyproject.toml`, for example the group `foo`:
+
+```sh
+uv pip install --group foo
+```
+
+To specify the project directory where groups should be sourced from:
+
+```sh
+uv pip install --project some/path/ --group foo --group bar
+```
+
+Alternatively, you can specify a path to a `pyproject.toml` for each group:
+
+```sh
+uv pip install --group some/path/pyproject.toml:foo --group other/pyproject.toml:bar
+```
+
+Note
+
+As in pip, `--group` flags do not apply to other sources specified with flags like `-r` or -e`. For instance,`uv pip install -r some/path/pyproject.toml --group foo`sources`foo`from`./pyproject.toml`and **not**`some/path/pyproject.toml`.
+
+### [Uninstalling a package](https://docs.astral.sh/uv/pip/packages/#uninstalling-a-package)
+
+To uninstall a package, e.g., Flask:
+
+```sh
+uv pip uninstall flask
+```
+
+To uninstall multiple packages, e.g., Flask and Ruff:
+
+```sh
+uv pip uninstall flask ruff
+```
+
+## [Inspecting environments](https://docs.astral.sh/uv/pip/inspection/#inspecting-environments)
+
+### [Listing installed packages](https://docs.astral.sh/uv/pip/inspection/#listing-installed-packages)
+
+To list all the packages in the environment:
+
+```sh
+uv pip list
+```
+
+To list the packages in a JSON format:
+
+```sh
+uv pip list --format json
+```
+
+To list all the packages in the environment in a `requirements.txt` format:
+
+```sh
+uv pip freeze
+```
+
+### [Inspecting a package](https://docs.astral.sh/uv/pip/inspection/#inspecting-a-package)
+
+To show information about an installed package, e.g., `numpy`:
+
+```sh
+uv pip show numpy
+```
+
+Multiple packages can be inspected at once.
+
+### [Verifying an environment](https://docs.astral.sh/uv/pip/inspection/#verifying-an-environment)
+
+It is possible to install packages with conflicting requirements into an environment if installed in multiple steps.
+
+To check for conflicts or missing dependencies in the environment:
+
+```sh
+uv pip check
+```
 
 # venv
 
 Create a virtual environment
 
 - 用法：`uv venv [目录] [--seed]`
-- 作用：创建新的虚拟环境。加 `--seed` 可自动安装 pip。
+
 - 例子：
   - `uv venv .venv` 在当前目录创建虚拟环境
-  - `uv venv --seed` 创建并包含 pip 的虚拟环境[2](https://pydevtools.com/handbook/how-to/how-to-use-pip-in-a-uv-virtual-environment/)。
+  
+  uv supports creating virtual environments, e.g., to create a virtual environment at `.venv`:
+  
+  ```
+  uv venv
+  ```
+  
+  A specific name or path can be specified, e.g., to create a virtual environment at `my-name`:
+  
+  ```
+  uv venv my-name
+  ```
+  
+  A Python version can be requested, e.g., to create a virtual environment with Python 3.11:
+  
+  ```
+  uv venv --python 3.11
+  ```
+  
+  Note this requires the requested Python version to be available on the system. However, if unavailable, uv will download Python for you. See the [Python version](https://docs.astral.sh/uv/concepts/python-versions/) documentation for more details.
 
 # build
 

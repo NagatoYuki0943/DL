@@ -1,0 +1,8 @@
+# 将清华源设置为默认主索引
+[[index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+# 添加阿里源
+[[index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
