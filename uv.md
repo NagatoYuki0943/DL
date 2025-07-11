@@ -429,7 +429,7 @@ Ini, TOML
 # pyproject.toml
 
 [tool.uv.pip]
-index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 extra-index-url = [
   "https://mirrors.aliyun.com/pypi/simple/",
   "https://pypi.mirrors.ustc.edu.cn/simple/"
@@ -451,7 +451,7 @@ Ini, TOML
 [tool.uv]
 # 将清华源设置为默认主索引
 [[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 default = true
 name = "tsinghua"
 
@@ -473,7 +473,7 @@ name = "aliyun"
 ```toml
 # 将清华源设置为默认主索引
 [[index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 default = true
 
 # 添加阿里源
