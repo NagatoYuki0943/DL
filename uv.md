@@ -209,6 +209,7 @@ To install a specific Python version:
 ```shell
 uv python install 3.13
 uv python install python3.13
+uv python install python3.13
 uv python install cpython-3.13.5-windows-x86_64-none
 ```
 
