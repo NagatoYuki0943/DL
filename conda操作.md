@@ -18,18 +18,48 @@
 
 # 下载
 
+[conda-forge](https://conda-forge.org/download/)
+
 [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
 [miniconda](https://repo.anaconda.com/miniconda/)
 
 [anaconda](https://www.anaconda.com/products/distribution)
 
-# 环境变量(anaconda和miniconda)
+# 环境变量(anaconda、miniconda、conda-forge)
 
 ```shell
 {conda}
 {conda}\Scripts
 {conda}\Library\bin
+```
+
+# mamba 说明
+
+命令中可以用 `mamba` 替换 `conda`
+
+## mamba 环境变量
+
+```sh
+mamba shell init
+```
+
+```sh
+'mamba' is running as a subprocess and can't modify the parent shell.
+Thus you must initialize your shell before using activate and deactivate.
+
+To initialize the current powershell shell, run:
+    $ mamba.exe shell hook -s powershell | Out-String | Invoke-Expression
+and then activate or deactivate with:
+    $ mamba activate
+To automatically initialize all future (powershell) shells, run:
+    $ mamba shell init --shell powershell --root-prefix=~/.local/share/mamba
+If your shell was already initialized, reinitialize your shell with:
+    $ mamba shell reinit --shell powershell
+Otherwise, this may be an issue. In the meantime you can run commands. See:
+    $ mamba run --help
+
+Supported shells are {bash, zsh, csh, posix, xonsh, cmd.exe, powershell, fish, nu}.
 ```
 
 # 查看帮助
@@ -105,18 +135,11 @@ channels:
   - defaults
 show_channel_urls: true
 default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
-custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  msys2: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  menpo: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  simpleitk: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  # conda-forge
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
 auto_activate_base: false
 ssl_verify: false
+changeps1: false
 ```
 
 > `~/.conda/environments.txt`  存放虚拟环境
