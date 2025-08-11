@@ -34,14 +34,14 @@ py get-pip.py       # windows
 > 临时使用
 
 ```shell
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple some-package
+pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple some-package
 ```
 
 > 设为默认
 
 ```shell
-python -m pip install --user --upgrade pip  #更新pip
-pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+python -m pip install --upgrade pip
+pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
 
 # pip命令

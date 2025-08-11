@@ -260,6 +260,8 @@ eg:
 
 ```shell
 uv python pin 3.13
+uv python pin python3.13
+uv python pin python313
 uv python pin cpython-3.13.5-windows-x86_64-none
 ```
 
@@ -431,10 +433,9 @@ Ini, TOML
 # pyproject.toml
 
 [tool.uv.pip]
-index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+index-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 extra-index-url = [
   "https://mirrors.aliyun.com/pypi/simple/",
-  "https://pypi.mirrors.ustc.edu.cn/simple/"
 ]
 ```
 
@@ -453,7 +454,7 @@ Ini, TOML
 [tool.uv]
 # 将清华源设置为默认主索引
 [[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 default = true
 name = "tsinghua"
 
@@ -475,7 +476,7 @@ name = "aliyun"
 ```toml
 # 将清华源设置为默认主索引
 [[index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 default = true
 
 # 添加阿里源
