@@ -141,7 +141,7 @@ default_channels:
 custom_channels:
   conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
   pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-auto_activate_base: false
+auto_activate: false
 ssl_verify: false
 changeps1: false
 ```
@@ -151,7 +151,7 @@ changeps1: false
 ## 关闭自动进入base环境
 
 ```shell
-conda config --set auto_activate_base false
+conda config --set auto_activate false
 ```
 
 ## 关闭ssl验证
