@@ -35,6 +35,7 @@ py get-pip.py       # windows
 
 ```shell
 pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple some-package
+pip install -i https://mirrors.aliyun.com/pypi/simple some-package
 ```
 
 > 设为默认
@@ -42,6 +43,7 @@ pip install -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple some-package
 ```shell
 python -m pip install --upgrade pip
 pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
 ```
 
 # pip命令

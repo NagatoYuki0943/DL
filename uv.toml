@@ -5,4 +5,4 @@ default = true
 
 # 添加阿里源
 [[index]]
-url = "https://mirrors.aliyun.com/pypi/simple/"
+url = "https://mirrors.aliyun.com/pypi/simple"

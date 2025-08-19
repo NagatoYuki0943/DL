@@ -435,7 +435,7 @@ Ini, TOML
 [tool.uv.pip]
 index-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 extra-index-url = [
-  "https://mirrors.aliyun.com/pypi/simple/",
+  "https://mirrors.aliyun.com/pypi/simple",
 ]
 ```
 
@@ -460,7 +460,7 @@ name = "tsinghua"
 
 # 添加阿里源作为额外索引
 [[tool.uv.index]]
-url = "https://mirrors.aliyun.com/pypi/simple/"
+url = "https://mirrors.aliyun.com/pypi/simple"
 name = "aliyun"
 ```
 
@@ -481,8 +481,7 @@ default = true
 
 # 添加阿里源
 [[index]]
-url = "https://mirrors.aliyun.com/pypi/simple/"
-
+url = "https://mirrors.aliyun.com/pypi/simple"
 ```
 
 # sync
